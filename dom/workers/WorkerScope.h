@@ -231,8 +231,43 @@ public:
   IMPL_EVENT_HANDLER(message)
 };
 
-JSObject*
-CreateGlobalScope(JSContext* aCx);
+class WorkerDebuggerGlobalScope MOZ_FINAL : public DOMEventTargetHelper,
+                                            public nsIGlobalObject
+{
+  WorkerPrivate* mWorkerPrivate;
+
+public:
+  WorkerDebuggerGlobalScope(WorkerPrivate* aWorkerPrivate);
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  virtual JSObject*
+  WrapObject(JSContext* aCx) MOZ_OVERRIDE
+  {
+    MOZ_CRASH("Shouldn't get here!");
+  }
+
+  virtual JSObject*
+  GetGlobalJSObject(void) MOZ_OVERRIDE
+  {
+    return GetWrapper();
+  }
+
+  // Matches the signature of WorkerGlobalScope's, but isn't an override
+  // because we don't inherit from it.
+  bool
+  WrapGlobalObject(JSContext* aCx,
+                   JS::MutableHandle<JSObject*> aReflector);
+
+  WorkerGlobalScope*
+  Global(JSContext* aCx);
+
+  void
+  Dump(JSContext* aCx, const Optional<nsAString>& aString) const;
+
+private:
+  virtual ~WorkerDebuggerGlobalScope();
+};
 
 END_WORKERS_NAMESPACE
 

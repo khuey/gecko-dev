@@ -63,6 +63,7 @@ class MessagePort;
 class SharedWorker;
 class WorkerControlRunnable;
 class WorkerDebugger;
+class WorkerDebuggerGlobalScope;
 class WorkerGlobalScope;
 class WorkerPrivate;
 class WorkerRunnable;
@@ -847,6 +848,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
 
   // Things touched on worker thread only.
   nsRefPtr<WorkerGlobalScope> mScope;
+  nsRefPtr<WorkerDebuggerGlobalScope> mDebuggerScope;
   nsTArray<ParentType*> mChildWorkers;
   nsTArray<WorkerFeature*> mFeatures;
   nsTArray<nsAutoPtr<TimeoutInfo>> mTimeouts;
@@ -1091,6 +1093,13 @@ public:
     return mScope;
   }
 
+  WorkerDebuggerGlobalScope*
+  DebuggerGlobalScope() const
+  {
+    AssertIsOnWorkerThread();
+    return mDebuggerScope;
+  }
+
   void
   SetThread(WorkerThread* aThread);
 
@@ -1138,8 +1147,11 @@ public:
   MessagePort*
   GetMessagePort(uint64_t aMessagePortSerial);
 
-  JSObject*
-  CreateGlobalScope(JSContext* aCx);
+  WorkerGlobalScope*
+  GetOrCreateGlobalScope(JSContext* aCx);
+
+  WorkerDebuggerGlobalScope*
+  CreateDebuggerGlobalScope(JSContext* aCx);
 
   bool
   RegisterBindings(JSContext* aCx, JS::Handle<JSObject*> aGlobal);

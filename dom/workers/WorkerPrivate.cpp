@@ -54,6 +54,8 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/StructuredClone.h"
 #include "mozilla/dom/WorkerBinding.h"
+#include "mozilla/dom/WorkerDebuggerGlobalScopeBinding.h"
+#include "mozilla/dom/WorkerGlobalScopeBinding.h"
 #include "mozilla/dom/indexedDB/IDBFactory.h"
 #include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/dom/ipc/nsIRemoteBlob.h"
@@ -874,13 +876,14 @@ private:
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
   {
-    JS::Rooted<JSObject*> global(aCx,
-      aWorkerPrivate->CreateGlobalScope(aCx));
-    if (!global) {
+    WorkerGlobalScope* globalScope =
+      aWorkerPrivate->GetOrCreateGlobalScope(aCx);
+    if (!globalScope) {
       NS_WARNING("Failed to make global!");
       return false;
     }
 
+    JS::Rooted<JSObject*> global(aCx, globalScope->GetWrapper());
     JSAutoCompartment ac(aCx, global);
     bool result = scriptloader::LoadWorkerScript(aCx);
     if (result) {
@@ -1222,21 +1225,31 @@ public:
       // Now fire an event at the global object, but don't do that if the error
       // code is too much recursion and this is the same script threw the error.
       if (aFireAtScope && (aTarget || aErrorNumber != JSMSG_OVER_RECURSED)) {
-        JS::Rooted<JSObject*> target(aCx, JS::CurrentGlobalOrNull(aCx));
-        NS_ASSERTION(target, "This should never be null!");
+        JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
+        NS_ASSERTION(global, "This should never be null!");
 
         nsEventStatus status = nsEventStatus_eIgnore;
         nsIScriptGlobalObject* sgo;
 
         if (aWorkerPrivate) {
-          WorkerGlobalScope* globalTarget = aWorkerPrivate->GlobalScope();
-          MOZ_ASSERT(target == globalTarget->GetWrapperPreserveColor());
+          nsIDOMEventTarget* target = nullptr;
+          WorkerGlobalScope* globalScope = nullptr;
+          UNWRAP_WORKER_OBJECT(WorkerGlobalScope, global, globalScope);
+          if (globalScope) {
+            MOZ_ASSERT(global == globalScope->GetWrapperPreserveColor());
+            target = static_cast<nsIDOMEventTarget*>(globalScope);
+          } else {
+            WorkerDebuggerGlobalScope* globalScope = nullptr;
+            UNWRAP_WORKER_OBJECT(WorkerDebuggerGlobalScope, global, globalScope);
+            MOZ_ASSERT(globalScope);
+            MOZ_ASSERT(global == globalScope->GetWrapperPreserveColor());
+            target = static_cast<nsIDOMEventTarget*>(globalScope);
+          }
 
           nsRefPtr<ErrorEvent> event =
             ErrorEvent::Constructor(aTarget, NS_LITERAL_STRING("error"), init);
           event->SetTrusted(true);
 
-          nsIDOMEventTarget* target = static_cast<nsIDOMEventTarget*>(globalTarget);
           if (NS_FAILED(EventDispatcher::DispatchDOMEvent(target, nullptr,
                                                           event, nullptr,
                                                           &status))) {
@@ -1244,7 +1257,7 @@ public:
             status = nsEventStatus_eIgnore;
           }
         }
-        else if ((sgo = nsJSUtils::GetStaticScriptGlobal(target))) {
+        else if ((sgo = nsJSUtils::GetStaticScriptGlobal(global))) {
           MOZ_ASSERT(NS_IsMainThread());
 
           if (NS_FAILED(sgo->HandleScriptError(init, &status))) {
@@ -4460,8 +4473,9 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
         // Clear away our MessagePorts.
         mWorkerPorts.Clear();
 
-        // Unroot the global
+        // Unroot the globals
         mScope = nullptr;
+        mDebuggerScope = nullptr;
 
         return;
       }
@@ -6313,19 +6327,49 @@ WorkerPrivate::GetMessagePort(uint64_t aMessagePortSerial)
   return nullptr;
 }
 
-JSObject*
-WorkerPrivate::CreateGlobalScope(JSContext* aCx)
+WorkerGlobalScope*
+WorkerPrivate::GetOrCreateGlobalScope(JSContext* aCx)
 {
   AssertIsOnWorkerThread();
 
-  nsRefPtr<WorkerGlobalScope> globalScope;
-  if (IsSharedWorker()) {
-    globalScope = new SharedWorkerGlobalScope(this, SharedWorkerName());
-  } else if (IsServiceWorker()) {
-    globalScope = new ServiceWorkerGlobalScope(this, SharedWorkerName());
-  } else {
-    globalScope = new DedicatedWorkerGlobalScope(this);
+  if (!mScope) {
+    nsRefPtr<WorkerGlobalScope> globalScope;
+    if (IsSharedWorker()) {
+      globalScope = new SharedWorkerGlobalScope(this, SharedWorkerName());
+    } else if (IsServiceWorker()) {
+      globalScope = new ServiceWorkerGlobalScope(this, SharedWorkerName());
+    } else {
+      globalScope = new DedicatedWorkerGlobalScope(this);
+    }
+
+    JS::Rooted<JSObject*> global(aCx);
+    if (!globalScope->WrapGlobalObject(aCx, &global)) {
+      return nullptr;
+    }
+
+    JSAutoCompartment ac(aCx, global);
+
+    if (!RegisterBindings(aCx, global)) {
+      return nullptr;
+    }
+
+    JS_FireOnNewGlobalObject(aCx, global);
+
+    mScope = globalScope.forget();
   }
+
+  return mScope;
+}
+
+WorkerDebuggerGlobalScope*
+WorkerPrivate::CreateDebuggerGlobalScope(JSContext* aCx)
+{
+  AssertIsOnWorkerThread();
+
+  MOZ_ASSERT(!mDebuggerScope);
+
+  nsRefPtr<WorkerDebuggerGlobalScope> globalScope =
+    new WorkerDebuggerGlobalScope(this);
 
   JS::Rooted<JSObject*> global(aCx);
   if (!globalScope->WrapGlobalObject(aCx, &global)) {
@@ -6334,15 +6378,15 @@ WorkerPrivate::CreateGlobalScope(JSContext* aCx)
 
   JSAutoCompartment ac(aCx, global);
 
-  if (!RegisterBindings(aCx, global)) {
+  if (!JS_DefineDebuggerObject(aCx, global)) {
     return nullptr;
   }
 
-  mScope = globalScope.forget();
-
   JS_FireOnNewGlobalObject(aCx, global);
 
-  return global;
+  mDebuggerScope = globalScope.forget();
+
+  return mDebuggerScope;
 }
 
 #ifdef DEBUG

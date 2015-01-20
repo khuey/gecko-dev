@@ -16,6 +16,8 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/SharedWorkerGlobalScopeBinding.h"
+#include "mozilla/dom/WorkerDebuggerGlobalScopeBinding.h"
+#include "mozilla/dom/WorkerGlobalScopeBinding.h"
 #include "mozilla/dom/indexedDB/IDBFactory.h"
 #include "mozilla/Services.h"
 #include "nsServiceManagerUtils.h"
@@ -36,10 +38,6 @@
 #include "WorkerRunnable.h"
 #include "Performance.h"
 #include "ServiceWorkerClients.h"
-
-#define UNWRAP_WORKER_OBJECT(Interface, obj, value)                           \
-  UnwrapObject<prototypes::id::Interface##_workers,                           \
-    mozilla::dom::Interface##Binding_workers::NativeType>(obj, value)
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -452,6 +450,81 @@ ServiceWorkerGlobalScope::Clients()
   }
 
   return mClients;
+}
+
+WorkerDebuggerGlobalScope::WorkerDebuggerGlobalScope(
+                                                  WorkerPrivate* aWorkerPrivate)
+: mWorkerPrivate(aWorkerPrivate)
+{
+  mWorkerPrivate->AssertIsOnWorkerThread();
+}
+
+WorkerDebuggerGlobalScope::~WorkerDebuggerGlobalScope()
+{
+  mWorkerPrivate->AssertIsOnWorkerThread();
+}
+
+NS_IMPL_ADDREF_INHERITED(WorkerDebuggerGlobalScope, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(WorkerDebuggerGlobalScope, DOMEventTargetHelper)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WorkerDebuggerGlobalScope)
+  NS_INTERFACE_MAP_ENTRY(nsIGlobalObject)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
+
+bool
+WorkerDebuggerGlobalScope::WrapGlobalObject(JSContext* aCx,
+                                            JS::MutableHandle<JSObject*> aReflector)
+{
+  mWorkerPrivate->AssertIsOnWorkerThread();
+
+  JS::CompartmentOptions options;
+  mWorkerPrivate->CopyJSCompartmentOptions(options);
+
+  return WorkerDebuggerGlobalScopeBinding_workers::Wrap(aCx, this, this,
+                                                        options,
+                                                        GetWorkerPrincipal(),
+                                                        true, aReflector);
+}
+
+WorkerGlobalScope*
+WorkerDebuggerGlobalScope::Global(JSContext* aCx)
+{
+  return mWorkerPrivate->GetOrCreateGlobalScope(aCx);
+}
+
+void
+WorkerDebuggerGlobalScope::Dump(JSContext* aCx,
+                                const Optional<nsAString>& aString) const
+{
+  return mWorkerPrivate->GetOrCreateGlobalScope(aCx)->Dump(aString);
+}
+
+nsIGlobalObject*
+GetGlobalObjectForGlobal(JSObject* global)
+{
+  nsIGlobalObject* globalObject = nullptr;
+  UNWRAP_WORKER_OBJECT(WorkerGlobalScope, global, globalObject);
+  if (!globalObject) {
+    UNWRAP_WORKER_OBJECT(WorkerDebuggerGlobalScope, global, globalObject);
+    MOZ_ASSERT(globalObject);
+  }
+  return globalObject;
+}
+
+bool
+IsWorkerGlobal(JSObject* object)
+{
+  nsIGlobalObject* globalObject = nullptr;
+  UNWRAP_WORKER_OBJECT(WorkerGlobalScope, object, globalObject);
+  return !!globalObject;
+}
+
+bool
+IsDebuggerGlobal(JSObject* object)
+{
+  nsIGlobalObject* globalObject = nullptr;
+  UNWRAP_WORKER_OBJECT(WorkerDebuggerGlobalScope, object, globalObject);
+  return !!globalObject;
 }
 
 bool
