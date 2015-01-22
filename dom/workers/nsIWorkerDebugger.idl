@@ -27,6 +27,9 @@ interface nsIWorkerDebugger : nsISupports
 
   readonly attribute nsIDOMWindow window;
 
+  [implicit_jscontext]
+  void initialize(in DOMString url);
+
   void addListener(in nsIWorkerDebuggerListener listener);
 
   void removeListener(in nsIWorkerDebuggerListener listener);

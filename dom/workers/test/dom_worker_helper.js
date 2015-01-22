@@ -13,6 +13,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const wdm = Cc["@mozilla.org/dom/workers/workerdebuggermanager;1"].
             getService(Ci.nsIWorkerDebuggerManager);
 
+const BASE_URL = "chrome://mochitests/content/chrome/dom/workers/test/";
+
 var gRemainingTests = 0;
 
 function waitForWorkerFinish() {
@@ -94,6 +96,19 @@ function waitForDebuggerClose(dbg, predicate = () => true) {
         dbg.removeListener(this);
         resolve();
       }
+    });
+  });
+}
+
+function waitForWorkerMessage(worker, predicate = () => true) {
+  return new Promise(function (resolve) {
+    worker.addEventListener("message", function onmessage(event) {
+      let message = event.data;
+      if (!predicate(message)) {
+        return;
+      }
+      worker.removeEventListener("message", onmessage);
+      resolve(message);
     });
   });
 }
