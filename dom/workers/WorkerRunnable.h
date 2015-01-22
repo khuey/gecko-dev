@@ -99,6 +99,12 @@ protected:
   virtual ~WorkerRunnable()
   { }
 
+  virtual bool
+  IsDebuggerRunnable() const;
+
+  nsIGlobalObject*
+  DefaultGlobalObject() const;
+
   // By default asserts that Dispatch() is being called on the right thread
   // (ParentThread if |mTarget| is WorkerThread, or WorkerThread otherwise).
   // Also increments the busy count of |mWorkerPrivate| if targeting the
