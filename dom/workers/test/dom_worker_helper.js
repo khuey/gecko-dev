@@ -100,6 +100,20 @@ function waitForDebuggerClose(dbg, predicate = () => true) {
   });
 }
 
+function waitForDebuggerMessage(dbg, predicate = () => true) {
+  return new Promise(function (resolve) {
+    dbg.addListener({
+      onMessage: function (message) {
+        if (!predicate(message)) {
+          return;
+        }
+        dbg.removeListener(this);
+        resolve(message);
+      }
+    });
+  });
+}
+
 function waitForWorkerMessage(worker, predicate = () => true) {
   return new Promise(function (resolve) {
     worker.addEventListener("message", function onmessage(event) {

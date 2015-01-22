@@ -373,6 +373,14 @@ WorkerRunnable::Cancel()
   return (canceledCount == 1) ? NS_OK : NS_ERROR_UNEXPECTED;
 }
 
+void
+WorkerDebuggerRunnable::PostDispatch(JSContext* aCx,
+                                     WorkerPrivate* aWorkerPrivate,
+                                     bool aDispatchResult)
+{
+  MaybeReportMainThreadException(aCx, aDispatchResult);
+}
+
 WorkerSyncRunnable::WorkerSyncRunnable(WorkerPrivate* aWorkerPrivate,
                                        nsIEventTarget* aSyncLoopTarget)
 : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),

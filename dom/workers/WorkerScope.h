@@ -263,6 +263,11 @@ public:
   Global(JSContext* aCx);
 
   void
+  PostMessage(const nsAString& aMessage, ErrorResult& aRv);
+
+  IMPL_EVENT_HANDLER(message)
+
+  void
   Dump(JSContext* aCx, const Optional<nsAString>& aString) const;
 
 private:

@@ -493,6 +493,13 @@ WorkerDebuggerGlobalScope::Global(JSContext* aCx)
 }
 
 void
+WorkerDebuggerGlobalScope::PostMessage(const nsAString& aMessage,
+                                       ErrorResult& aRv)
+{
+  mWorkerPrivate->PostMessageToDebugger(aMessage, aRv);
+}
+
+void
 WorkerDebuggerGlobalScope::Dump(JSContext* aCx,
                                 const Optional<nsAString>& aString) const
 {

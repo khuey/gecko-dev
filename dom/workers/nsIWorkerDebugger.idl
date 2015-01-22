@@ -6,9 +6,11 @@ interface nsIDOMWindow;
 interface nsIWorkerDebuggerListener : nsISupports
 {
   void onClose();
+
+  void onMessage(in DOMString message);
 };
 
-[scriptable, builtinclass, uuid(0833b363-bffe-4cdb-ad50-1c4563e0C8ff)]
+[scriptable, builtinclass, uuid(0833b364-bffe-4cdb-ad50-1c4563e0C8ff)]
 interface nsIWorkerDebugger : nsISupports
 {
   const unsigned long TYPE_DEDICATED = 0;
@@ -29,6 +31,9 @@ interface nsIWorkerDebugger : nsISupports
 
   [implicit_jscontext]
   void initialize(in DOMString url);
+
+  [implicit_jscontext, binaryname(PostMessageMoz)]
+  void postMessage(in DOMString message);
 
   void addListener(in nsIWorkerDebuggerListener listener);
 

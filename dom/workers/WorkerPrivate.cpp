@@ -898,39 +898,18 @@ private:
   }
 };
 
-class CompileDebuggerScriptRunnable MOZ_FINAL : public WorkerRunnable
+class CompileDebuggerScriptRunnable MOZ_FINAL : public WorkerDebuggerRunnable
 {
   nsString mScriptURL;
 
 public:
   CompileDebuggerScriptRunnable(WorkerPrivate* aWorkerPrivate,
                                 const nsAString& aScriptURL)
-  : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
+  : WorkerDebuggerRunnable(aWorkerPrivate),
     mScriptURL(aScriptURL)
   { }
 
 private:
-  virtual bool
-  IsDebuggerRunnable() const MOZ_OVERRIDE
-  {
-    return true;
-  }
-
-  virtual bool
-  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
-  {
-    AssertIsOnMainThread();
-
-    return true;
-  }
-
-  virtual void
-  PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-               bool aDispatchResult) MOZ_OVERRIDE
-  {
-    AssertIsOnMainThread();
-  }
-
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
   {
@@ -1122,6 +1101,54 @@ private:
 
     return DispatchDOMEvent(aCx, aWorkerPrivate, aWorkerPrivate->GlobalScope(),
                             false);
+  }
+};
+
+class DebuggerMessageEventRunnable : public WorkerDebuggerRunnable {
+  nsString mMessage;
+
+public:
+  DebuggerMessageEventRunnable(WorkerPrivate* aWorkerPrivate,
+                               const nsAString& aMessage)
+  : WorkerDebuggerRunnable(aWorkerPrivate),
+    mMessage(aMessage)
+  {
+  }
+
+private:
+  virtual bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
+  {
+    WorkerDebuggerGlobalScope* globalScope = aWorkerPrivate->DebuggerGlobalScope();
+    MOZ_ASSERT(globalScope);
+
+    JS::Rooted<JSString*> message(aCx, JS_NewUCStringCopyN(aCx, mMessage.get(),
+                                                           mMessage.Length()));
+    if (!message) {
+      return false;
+    }
+    JS::Rooted<JS::Value> data(aCx, JS::StringValue(message));
+
+    nsRefPtr<MessageEvent> event = new MessageEvent(globalScope, nullptr,
+                                                    nullptr);
+    nsresult rv =
+      event->InitMessageEvent(NS_LITERAL_STRING("message"),
+                              false, // canBubble
+                              true, // cancelable
+                              data,
+                              EmptyString(),
+                              EmptyString(),
+                              nullptr);
+    if (NS_FAILED(rv)) {
+      xpc::Throw(aCx, rv);
+      return false;
+    }
+    event->SetTrusted(true);
+
+    nsCOMPtr<nsIDOMEvent> domEvent = do_QueryObject(event);
+    nsEventStatus status = nsEventStatus_eIgnore;
+    globalScope->DispatchDOMEvent(nullptr, domEvent, nullptr, &status);
+    return true;
   }
 };
 
@@ -3964,6 +3991,26 @@ WorkerDebugger::Initialize(const nsAString& aURL, JSContext* aCx)
 }
 
 NS_IMETHODIMP
+WorkerDebugger::PostMessageMoz(const nsAString& aMessage, JSContext* aCx)
+{
+  AssertIsOnMainThread();
+
+  MutexAutoLock lock(mMutex);
+
+  if (!mWorkerPrivate || !mIsInitialized) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsRefPtr<DebuggerMessageEventRunnable> runnable =
+    new DebuggerMessageEventRunnable(mWorkerPrivate, aMessage);
+  if (!runnable->Dispatch(aCx)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 WorkerDebugger::AddListener(nsIWorkerDebuggerListener* aListener)
 {
   AssertIsOnMainThread();
@@ -4041,6 +4088,35 @@ WorkerDebugger::Disable()
   }
 
   NotifyIsEnabled(false);
+}
+
+void
+WorkerDebugger::PostMessageToDebugger(const nsAString& aMessage)
+{
+  mWorkerPrivate->AssertIsOnWorkerThread();
+
+  nsCOMPtr<nsIRunnable> runnable =
+    NS_NewRunnableMethodWithArg<nsString>(this,
+      &WorkerDebugger::PostMessageToDebuggerOnMainThread, nsString(aMessage));
+  NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL);
+}
+
+void
+WorkerDebugger::PostMessageToDebuggerOnMainThread(const nsAString& aMessage)
+{
+  AssertIsOnMainThread();
+
+  nsTArray<nsCOMPtr<nsIWorkerDebuggerListener>> listeners;
+
+  {
+    MutexAutoLock lock(mMutex);
+
+    listeners.AppendElements(mListeners);
+  }
+
+  for (size_t index = 0; index < listeners.Length(); ++index) {
+    listeners[index]->OnMessage(aMessage);
+  }
 }
 
 WorkerPrivate::WorkerPrivate(JSContext* aCx,
@@ -5633,6 +5709,13 @@ WorkerPrivate::PostMessageToParentMessagePort(
 
   PostMessageToParentInternal(aCx, aMessage, aTransferable, true,
                               aMessagePortSerial, aRv);
+}
+
+void
+WorkerPrivate::PostMessageToDebugger(const nsAString& aMessage,
+                                     ErrorResult& aRv)
+{
+  mDebugger->PostMessageToDebugger(aMessage);
 }
 
 bool
