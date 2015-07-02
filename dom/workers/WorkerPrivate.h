@@ -949,9 +949,6 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   // modifications are done with mMutex held *only* in DEBUG builds.
   nsTArray<nsAutoPtr<SyncLoopInfo>> mSyncLoopStack;
 
-  struct PreemptingRunnableInfo;
-  nsTArray<PreemptingRunnableInfo> mPreemptingRunnableInfos;
-
   nsCOMPtr<nsITimer> mTimer;
 
   nsCOMPtr<nsITimer> mGCTimer;
@@ -1355,10 +1352,10 @@ public:
   ClearMainEventQueue(WorkerRanOrNot aRanOrNot);
 
   void
-  OnProcessNextEvent(uint32_t aRecursionDepth);
+  OnProcessNextEvent();
 
   void
-  AfterProcessNextEvent(uint32_t aRecursionDepth);
+  AfterProcessNextEvent();
 
   void
   AssertValidSyncLoop(nsIEventTarget* aSyncLoopTarget)
@@ -1384,11 +1381,6 @@ public:
     AssertIsOnWorkerThread();
     return mWorkerScriptExecutedSuccessfully;
   }
-
-  // Just like nsIAppShell::RunBeforeNextEvent. May only be called on the worker
-  // thread.
-  bool
-  RunBeforeNextEvent(nsIRunnable* aRunnable);
 
   void
   MaybeDispatchLoadFailedRunnable();
