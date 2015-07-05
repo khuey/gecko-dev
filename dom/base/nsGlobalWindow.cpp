@@ -406,18 +406,6 @@ nsGlobalWindow::DOMMinTimeoutValue() const {
   }                                                                           \
   PR_END_MACRO
 
-#define FORWARD_TO_INNER_OR_THROW(method, args, errorresult, err_rval)        \
-  PR_BEGIN_MACRO                                                              \
-  if (IsOuterWindow()) {                                                      \
-    if (!mInnerWindow) {                                                      \
-      NS_WARNING("No inner window available!");                               \
-      errorresult.Throw(NS_ERROR_NOT_INITIALIZED);                            \
-      return err_rval;                                                        \
-    }                                                                         \
-    return GetCurrentInnerWindowInternal()->method args;                      \
-  }                                                                           \
-  PR_END_MACRO
-
 #define FORWARD_TO_INNER_MODAL_CONTENT_WINDOW(method, args, err_rval)         \
   PR_BEGIN_MACRO                                                              \
   if (IsOuterWindow()) {                                                      \
@@ -3560,7 +3548,7 @@ nsGlobalWindow::GetSelf(nsIDOMWindow** aWindow)
 Navigator*
 nsGlobalWindow::GetNavigator(ErrorResult& aError)
 {
-  FORWARD_TO_INNER_OR_THROW(GetNavigator, (aError), aError, nullptr);
+  MOZ_ASSERT(IsInnerWindow());
 
   if (!mNavigator) {
     mNavigator = new Navigator(this);
@@ -3572,6 +3560,8 @@ nsGlobalWindow::GetNavigator(ErrorResult& aError)
 NS_IMETHODIMP
 nsGlobalWindow::GetNavigator(nsIDOMNavigator** aNavigator)
 {
+  FORWARD_TO_INNER(GetNavigator, (aNavigator), NS_ERROR_UNEXPECTED);
+
   ErrorResult rv;
   nsCOMPtr<nsIDOMNavigator> navigator = GetNavigator(rv);
   navigator.forget(aNavigator);
@@ -3582,7 +3572,7 @@ nsGlobalWindow::GetNavigator(nsIDOMNavigator** aNavigator)
 nsScreen*
 nsGlobalWindow::GetScreen(ErrorResult& aError)
 {
-  FORWARD_TO_INNER_OR_THROW(GetScreen, (aError), aError, nullptr);
+  MOZ_ASSERT(IsInnerWindow());
 
   if (!mScreen) {
     mScreen = nsScreen::Create(this);
@@ -3598,6 +3588,8 @@ nsGlobalWindow::GetScreen(ErrorResult& aError)
 NS_IMETHODIMP
 nsGlobalWindow::GetScreen(nsIDOMScreen** aScreen)
 {
+  FORWARD_TO_INNER(GetScreen, (aScreen), NS_ERROR_UNEXPECTED);
+
   ErrorResult rv;
   nsRefPtr<nsScreen> screen = GetScreen(rv);
   screen.forget(aScreen);
@@ -3608,7 +3600,7 @@ nsGlobalWindow::GetScreen(nsIDOMScreen** aScreen)
 nsHistory*
 nsGlobalWindow::GetHistory(ErrorResult& aError)
 {
-  FORWARD_TO_INNER_OR_THROW(GetHistory, (aError), aError, nullptr);
+  MOZ_ASSERT(IsInnerWindow());
 
   if (!mHistory) {
     mHistory = new nsHistory(this);
@@ -3620,6 +3612,8 @@ nsGlobalWindow::GetHistory(ErrorResult& aError)
 NS_IMETHODIMP
 nsGlobalWindow::GetHistory(nsISupports** aHistory)
 {
+  FORWARD_TO_INNER(GetHistory, (aHistory), NS_ERROR_FAILURE);
+
   ErrorResult rv;
   nsCOMPtr<nsISupports> history = GetHistory(rv);
   history.forget(aHistory);
@@ -3777,7 +3771,7 @@ nsPIDOMWindow::RefreshMediaElements()
 SpeechSynthesis*
 nsGlobalWindow::GetSpeechSynthesis(ErrorResult& aError)
 {
-  FORWARD_TO_INNER_OR_THROW(GetSpeechSynthesis, (aError), aError, nullptr);
+  MOZ_ASSERT(IsInnerWindow());
 
   if (!mSpeechSynthesis) {
     mSpeechSynthesis = new SpeechSynthesis(this);
@@ -4012,6 +4006,8 @@ nsGlobalWindow::GetContent(nsIDOMWindow** aContent)
 MozSelfSupport*
 nsGlobalWindow::GetMozSelfSupport(ErrorResult& aError)
 {
+  MOZ_ASSERT(IsInnerWindow());
+
   if (mMozSelfSupport) {
     return mMozSelfSupport;
   }
@@ -4060,7 +4056,7 @@ nsGlobalWindow::GetPrompter(nsIPrompt** aPrompt)
 BarProp*
 nsGlobalWindow::GetMenubar(ErrorResult& aError)
 {
-  FORWARD_TO_INNER_OR_THROW(GetMenubar, (aError), aError, nullptr);
+  MOZ_ASSERT(IsInnerWindow());
 
   if (!mMenubar) {
     mMenubar = new MenubarProp(this);
@@ -4072,6 +4068,8 @@ nsGlobalWindow::GetMenubar(ErrorResult& aError)
 NS_IMETHODIMP
 nsGlobalWindow::GetMenubar(nsISupports** aMenubar)
 {
+  FORWARD_TO_INNER(GetMenubar, (aMenubar), NS_ERROR_UNEXPECTED);
+
   ErrorResult rv;
   nsCOMPtr<nsISupports> menubar = GetMenubar(rv);
   menubar.forget(aMenubar);
@@ -4082,7 +4080,7 @@ nsGlobalWindow::GetMenubar(nsISupports** aMenubar)
 BarProp*
 nsGlobalWindow::GetToolbar(ErrorResult& aError)
 {
-  FORWARD_TO_INNER_OR_THROW(GetToolbar, (aError), aError, nullptr);
+  MOZ_ASSERT(IsInnerWindow());
 
   if (!mToolbar) {
     mToolbar = new ToolbarProp(this);
@@ -4094,6 +4092,8 @@ nsGlobalWindow::GetToolbar(ErrorResult& aError)
 NS_IMETHODIMP
 nsGlobalWindow::GetToolbar(nsISupports** aToolbar)
 {
+  FORWARD_TO_INNER(GetToolbar, (aToolbar), NS_ERROR_UNEXPECTED);
+
   ErrorResult rv;
   nsCOMPtr<nsISupports> toolbar = GetToolbar(rv);
   toolbar.forget(aToolbar);
@@ -4104,7 +4104,7 @@ nsGlobalWindow::GetToolbar(nsISupports** aToolbar)
 BarProp*
 nsGlobalWindow::GetLocationbar(ErrorResult& aError)
 {
-  FORWARD_TO_INNER_OR_THROW(GetLocationbar, (aError), aError, nullptr);
+  MOZ_ASSERT(IsInnerWindow());
 
   if (!mLocationbar) {
     mLocationbar = new LocationbarProp(this);
@@ -4115,6 +4115,8 @@ nsGlobalWindow::GetLocationbar(ErrorResult& aError)
 NS_IMETHODIMP
 nsGlobalWindow::GetLocationbar(nsISupports** aLocationbar)
 {
+  FORWARD_TO_INNER(GetLocationbar, (aLocationbar), NS_ERROR_UNEXPECTED);
+
   ErrorResult rv;
   nsCOMPtr<nsISupports> locationbar = GetLocationbar(rv);
   locationbar.forget(aLocationbar);
@@ -4125,7 +4127,7 @@ nsGlobalWindow::GetLocationbar(nsISupports** aLocationbar)
 BarProp*
 nsGlobalWindow::GetPersonalbar(ErrorResult& aError)
 {
-  FORWARD_TO_INNER_OR_THROW(GetPersonalbar, (aError), aError, nullptr);
+  MOZ_ASSERT(IsInnerWindow());
 
   if (!mPersonalbar) {
     mPersonalbar = new PersonalbarProp(this);
@@ -4136,6 +4138,8 @@ nsGlobalWindow::GetPersonalbar(ErrorResult& aError)
 NS_IMETHODIMP
 nsGlobalWindow::GetPersonalbar(nsISupports** aPersonalbar)
 {
+  FORWARD_TO_INNER(GetPersonalbar, (aPersonalbar), NS_ERROR_UNEXPECTED);
+
   ErrorResult rv;
   nsCOMPtr<nsISupports> personalbar = GetPersonalbar(rv);
   personalbar.forget(aPersonalbar);
@@ -4146,7 +4150,7 @@ nsGlobalWindow::GetPersonalbar(nsISupports** aPersonalbar)
 BarProp*
 nsGlobalWindow::GetStatusbar(ErrorResult& aError)
 {
-  FORWARD_TO_INNER_OR_THROW(GetStatusbar, (aError), aError, nullptr);
+  MOZ_ASSERT(IsInnerWindow());
 
   if (!mStatusbar) {
     mStatusbar = new StatusbarProp(this);
@@ -4157,6 +4161,8 @@ nsGlobalWindow::GetStatusbar(ErrorResult& aError)
 NS_IMETHODIMP
 nsGlobalWindow::GetStatusbar(nsISupports** aStatusbar)
 {
+  FORWARD_TO_INNER(GetStatusbar, (aStatusbar), NS_ERROR_UNEXPECTED);
+
   ErrorResult rv;
   nsCOMPtr<nsISupports> statusbar = GetStatusbar(rv);
   statusbar.forget(aStatusbar);
@@ -4167,7 +4173,7 @@ nsGlobalWindow::GetStatusbar(nsISupports** aStatusbar)
 BarProp*
 nsGlobalWindow::GetScrollbars(ErrorResult& aError)
 {
-  FORWARD_TO_INNER_OR_THROW(GetScrollbars, (aError), aError, nullptr);
+  MOZ_ASSERT(IsInnerWindow());
 
   if (!mScrollbars) {
     mScrollbars = new ScrollbarsProp(this);
@@ -4179,6 +4185,8 @@ nsGlobalWindow::GetScrollbars(ErrorResult& aError)
 NS_IMETHODIMP
 nsGlobalWindow::GetScrollbars(nsISupports** aScrollbars)
 {
+  FORWARD_TO_INNER(GetScrollbars, (aScrollbars), NS_ERROR_UNEXPECTED);
+
   ErrorResult rv;
   nsCOMPtr<nsISupports> scrollbars = GetScrollbars(rv);
   scrollbars.forget(aScrollbars);
@@ -4320,6 +4328,7 @@ void
 nsGlobalWindow::GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& aNames,
                                     ErrorResult& aRv)
 {
+  MOZ_ASSERT(IsInnerWindow());
   // "Components" is marked as enumerable but only resolved on demand :-/.
   //aNames.AppendElement(NS_LITERAL_STRING("Components"));
 
@@ -4364,7 +4373,7 @@ nsGlobalWindow::IsShowModalDialogEnabled(JSContext*, JSObject*)
 nsIDOMOfflineResourceList*
 nsGlobalWindow::GetApplicationCache(ErrorResult& aError)
 {
-  FORWARD_TO_INNER_OR_THROW(GetApplicationCache, (aError), aError, nullptr);
+  MOZ_ASSERT(IsInnerWindow());
 
   if (!mApplicationCache) {
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetDocShell()));
@@ -4396,6 +4405,8 @@ nsGlobalWindow::GetApplicationCache(ErrorResult& aError)
 NS_IMETHODIMP
 nsGlobalWindow::GetApplicationCache(nsIDOMOfflineResourceList **aApplicationCache)
 {
+  FORWARD_TO_INNER(GetApplicationCache, (aApplicationCache), NS_ERROR_UNEXPECTED);
+
   ErrorResult rv;
   nsCOMPtr<nsIDOMOfflineResourceList> applicationCache =
     GetApplicationCache(rv);
@@ -4407,7 +4418,7 @@ nsGlobalWindow::GetApplicationCache(nsIDOMOfflineResourceList **aApplicationCach
 Crypto*
 nsGlobalWindow::GetCrypto(ErrorResult& aError)
 {
-  FORWARD_TO_INNER_OR_THROW(GetCrypto, (aError), aError, nullptr);
+  MOZ_ASSERT(IsInnerWindow());
 
   if (!mCrypto) {
     mCrypto = new Crypto();
@@ -4419,6 +4430,8 @@ nsGlobalWindow::GetCrypto(ErrorResult& aError)
 NS_IMETHODIMP
 nsGlobalWindow::GetCrypto(nsIDOMCrypto** aCrypto)
 {
+  FORWARD_TO_INNER(GetCrypto, (aCrypto), NS_ERROR_UNEXPECTED);
+
   ErrorResult rv;
   nsCOMPtr<nsIDOMCrypto> crypto = GetCrypto(rv);
   crypto.forget(aCrypto);
@@ -5324,6 +5337,8 @@ NS_IMETHODIMP
 nsGlobalWindow::MozRequestAnimationFrame(nsIFrameRequestCallback* aCallback,
                                          int32_t *aHandle)
 {
+  FORWARD_TO_INNER(MozRequestAnimationFrame, (aCallback, aHandle), NS_ERROR_UNEXPECTED);
+
   if (!aCallback) {
     if (mDoc) {
       mDoc->WarnOnceAbout(nsIDocument::eMozBeforePaint);
@@ -5342,6 +5357,8 @@ int32_t
 nsGlobalWindow::RequestAnimationFrame(FrameRequestCallback& aCallback,
                                       ErrorResult& aError)
 {
+  MOZ_ASSERT(IsInnerWindow());
+
   nsIDocument::FrameRequestCallbackHolder holder(&aCallback);
   return RequestAnimationFrame(holder, aError);
 }
@@ -5350,6 +5367,7 @@ int32_t
 nsGlobalWindow::MozRequestAnimationFrame(nsIFrameRequestCallback* aCallback,
                                          ErrorResult& aError)
 {
+  MOZ_ASSERT(IsInnerWindow());
   nsIDocument::FrameRequestCallbackHolder holder(aCallback);
   return RequestAnimationFrame(holder, aError);
 }
@@ -5358,8 +5376,7 @@ int32_t
 nsGlobalWindow::RequestAnimationFrame(const nsIDocument::FrameRequestCallbackHolder& aCallback,
                                       ErrorResult& aError)
 {
-  FORWARD_TO_INNER_OR_THROW(RequestAnimationFrame, (aCallback, aError), aError,
-                            0);
+  MOZ_ASSERT(IsInnerWindow());
 
   if (!mDoc) {
     return 0;
@@ -5379,6 +5396,7 @@ nsGlobalWindow::RequestAnimationFrame(JS::Handle<JS::Value> aCallback,
                                       JSContext* cx,
                                       int32_t* aHandle)
 {
+  FORWARD_TO_INNER(RequestAnimationFrame, (aCallback, cx, aHandle), NS_ERROR_UNEXPECTED);
   if (!aCallback.isObject() || !JS::IsCallable(&aCallback.toObject())) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -5396,19 +5414,21 @@ nsGlobalWindow::RequestAnimationFrame(JS::Handle<JS::Value> aCallback,
 NS_IMETHODIMP
 nsGlobalWindow::MozCancelRequestAnimationFrame(int32_t aHandle)
 {
+  FORWARD_TO_INNER(MozCancelRequestAnimationFrame, (aHandle), NS_ERROR_UNEXPECTED);
   return CancelAnimationFrame(aHandle);
 }
 
 NS_IMETHODIMP
 nsGlobalWindow::MozCancelAnimationFrame(int32_t aHandle)
 {
+  FORWARD_TO_INNER(MozCancelAnimationFrame, (aHandle), NS_ERROR_UNEXPECTED);
   return CancelAnimationFrame(aHandle);
 }
 
 void
 nsGlobalWindow::CancelAnimationFrame(int32_t aHandle, ErrorResult& aError)
 {
-  FORWARD_TO_INNER_OR_THROW(CancelAnimationFrame, (aHandle, aError), aError, );
+  MOZ_ASSERT(IsInnerWindow());
 
   if (!mDoc) {
     return;
@@ -5420,6 +5440,8 @@ nsGlobalWindow::CancelAnimationFrame(int32_t aHandle, ErrorResult& aError)
 NS_IMETHODIMP
 nsGlobalWindow::CancelAnimationFrame(int32_t aHandle)
 {
+  FORWARD_TO_INNER(CancelAnimationFrame, (aHandle), NS_ERROR_UNEXPECTED);
+
   ErrorResult rv;
   CancelAnimationFrame(aHandle, rv);
 
@@ -5429,7 +5451,7 @@ nsGlobalWindow::CancelAnimationFrame(int32_t aHandle)
 int64_t
 nsGlobalWindow::GetMozAnimationStartTime(ErrorResult& aError)
 {
-  FORWARD_TO_INNER_OR_THROW(GetMozAnimationStartTime, (aError), aError, 0);
+  MOZ_ASSERT(IsInnerWindow());
 
   if (mDoc) {
     nsIPresShell* presShell = mDoc->GetShell();
@@ -5446,6 +5468,8 @@ nsGlobalWindow::GetMozAnimationStartTime(ErrorResult& aError)
 NS_IMETHODIMP
 nsGlobalWindow::GetMozAnimationStartTime(int64_t *aTime)
 {
+  FORWARD_TO_INNER(GetMozAnimationStartTime, (aTime), NS_ERROR_UNEXPECTED);
+
   ErrorResult rv;
   *aTime = GetMozAnimationStartTime(rv);
 
@@ -7535,6 +7559,8 @@ nsGlobalWindow::MozRequestOverfill(OverfillCallback& aCallback,
 void
 nsGlobalWindow::ClearTimeout(int32_t aHandle, ErrorResult& aError)
 {
+  MOZ_ASSERT(IsInnerWindow());
+
   if (aHandle > 0) {
     ClearTimeoutOrInterval(aHandle, aError);
   }
@@ -7543,6 +7569,8 @@ nsGlobalWindow::ClearTimeout(int32_t aHandle, ErrorResult& aError)
 NS_IMETHODIMP
 nsGlobalWindow::ClearTimeout(int32_t aHandle)
 {
+  FORWARD_TO_INNER(ClearTimeout, (aHandle), NS_ERROR_UNEXPECTED);
+
   ErrorResult rv;
   ClearTimeout(aHandle, rv);
 
@@ -9529,11 +9557,10 @@ nsGlobalWindow::GetPrivateRoot()
   return static_cast<nsGlobalWindow*>(top.get());
 }
 
-
 nsLocation*
 nsGlobalWindow::GetLocation(ErrorResult& aError)
 {
-  FORWARD_TO_INNER_OR_THROW(GetLocation, (aError), aError, nullptr);
+  MOZ_ASSERT(IsInnerWindow());
 
   nsIDocShell *docShell = GetDocShell();
   if (!mLocation && docShell) {
@@ -9545,6 +9572,8 @@ nsGlobalWindow::GetLocation(ErrorResult& aError)
 NS_IMETHODIMP
 nsGlobalWindow::GetLocation(nsIDOMLocation ** aLocation)
 {
+  FORWARD_TO_INNER(GetLocation, (aLocation), NS_ERROR_UNEXPECTED);
+
   ErrorResult rv;
   nsCOMPtr<nsIDOMLocation> location = GetLocation(rv);
   location.forget(aLocation);
@@ -9923,7 +9952,7 @@ private:
 nsresult
 nsGlobalWindow::DispatchAsyncHashchange(nsIURI *aOldURI, nsIURI *aNewURI)
 {
-  FORWARD_TO_INNER(DispatchAsyncHashchange, (aOldURI, aNewURI), NS_OK);
+  MOZ_ASSERT(IsInnerWindow());
 
   // Make sure that aOldURI and aNewURI are identical up to the '#', and that
   // their hashes are different.
@@ -9953,8 +9982,9 @@ nsGlobalWindow::FireHashchange(const nsAString &aOldURL,
   MOZ_ASSERT(IsInnerWindow());
 
   // Don't do anything if the window is frozen.
-  if (IsFrozen())
+  if (IsFrozen()) {
     return NS_OK;
+  }
 
   // Get a presentation shell for use in creating the hashchange event.
   NS_ENSURE_STATE(IsCurrentInnerWindow());
@@ -9984,8 +10014,7 @@ nsGlobalWindow::FireHashchange(const nsAString &aOldURL,
 nsresult
 nsGlobalWindow::DispatchSyncPopState()
 {
-  FORWARD_TO_INNER(DispatchSyncPopState, (), NS_OK);
-
+  MOZ_ASSERT(IsInnerWindow());
   NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
                "Must be safe to run script here.");
 
@@ -10213,7 +10242,7 @@ nsGlobalWindow::GetComputedStyleHelper(Element& aElt,
 DOMStorage*
 nsGlobalWindow::GetSessionStorage(ErrorResult& aError)
 {
-  FORWARD_TO_INNER_OR_THROW(GetSessionStorage, (aError), aError, nullptr);
+  MOZ_ASSERT(IsInnerWindow());
 
   nsIPrincipal *principal = GetPrincipal();
   nsIDocShell* docShell = GetDocShell();
@@ -10292,6 +10321,8 @@ nsGlobalWindow::GetSessionStorage(ErrorResult& aError)
 NS_IMETHODIMP
 nsGlobalWindow::GetSessionStorage(nsISupports** aSessionStorage)
 {
+  FORWARD_TO_INNER(GetSessionStorage, (aSessionStorage), NS_ERROR_FAILURE);
+
   ErrorResult rv;
   nsCOMPtr<nsIDOMStorage> storage = GetSessionStorage(rv);
   storage.forget(aSessionStorage);
@@ -10302,7 +10333,7 @@ nsGlobalWindow::GetSessionStorage(nsISupports** aSessionStorage)
 DOMStorage*
 nsGlobalWindow::GetLocalStorage(ErrorResult& aError)
 {
-  FORWARD_TO_INNER_OR_THROW(GetLocalStorage, (aError), aError, nullptr);
+  MOZ_ASSERT(IsInnerWindow());
 
   if (!Preferences::GetBool(kStorageEnabled)) {
     return nullptr;
@@ -10358,6 +10389,7 @@ NS_IMETHODIMP
 nsGlobalWindow::GetLocalStorage(nsISupports** aLocalStorage)
 {
   NS_ENSURE_ARG(aLocalStorage);
+  FORWARD_TO_INNER(GetLocalStorage, (aLocalStorage), NS_ERROR_UNEXPECTED);
 
   ErrorResult rv;
   nsCOMPtr<nsIDOMStorage> storage = GetLocalStorage(rv);
@@ -10369,6 +10401,7 @@ nsGlobalWindow::GetLocalStorage(nsISupports** aLocalStorage)
 IDBFactory*
 nsGlobalWindow::GetIndexedDB(ErrorResult& aError)
 {
+  MOZ_ASSERT(IsInnerWindow());
   if (!mIndexedDB) {
     // This may keep mIndexedDB null without setting an error.
     aError = IDBFactory::CreateForWindow(this, getter_AddRefs(mIndexedDB));
@@ -12308,8 +12341,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
 void
 nsGlobalWindow::ClearTimeoutOrInterval(int32_t aTimerID, ErrorResult& aError)
 {
-  FORWARD_TO_INNER_OR_THROW(ClearTimeoutOrInterval, (aTimerID, aError),
-                            aError, );
+  MOZ_ASSERT(IsInnerWindow());
 
   uint32_t public_id = (uint32_t)aTimerID;
   nsTimeout *timeout;
@@ -13553,6 +13585,8 @@ nsGlobalWindow::NotifyDefaultButtonLoaded(Element& aDefaultButton,
 NS_IMETHODIMP
 nsGlobalChromeWindow::GetMessageManager(nsIMessageBroadcaster** aManager)
 {
+  FORWARD_TO_INNER_CHROME(GetMessageManager, (aManager), NS_ERROR_UNEXPECTED);
+
   ErrorResult rv;
   NS_IF_ADDREF(*aManager = GetMessageManager(rv));
   return rv.StealNSResult();
@@ -13561,8 +13595,8 @@ nsGlobalChromeWindow::GetMessageManager(nsIMessageBroadcaster** aManager)
 nsIMessageBroadcaster*
 nsGlobalWindow::GetMessageManager(ErrorResult& aError)
 {
-  FORWARD_TO_INNER_OR_THROW(GetMessageManager, (aError), aError, nullptr);
   MOZ_ASSERT(IsChromeWindow());
+  MOZ_ASSERT(IsInnerWindow());
   nsGlobalChromeWindow* myself = static_cast<nsGlobalChromeWindow*>(this);
   if (!myself->mMessageManager) {
     nsCOMPtr<nsIMessageBroadcaster> globalMM =
@@ -13579,6 +13613,8 @@ NS_IMETHODIMP
 nsGlobalChromeWindow::GetGroupMessageManager(const nsAString& aGroup,
                                              nsIMessageBroadcaster** aManager)
 {
+  FORWARD_TO_INNER_CHROME(GetGroupMessageManager, (aGroup, aManager), NS_ERROR_UNEXPECTED);
+
   ErrorResult rv;
   NS_IF_ADDREF(*aManager = GetGroupMessageManager(aGroup, rv));
   return rv.StealNSResult();
@@ -13588,8 +13624,8 @@ nsIMessageBroadcaster*
 nsGlobalWindow::GetGroupMessageManager(const nsAString& aGroup,
                                        ErrorResult& aError)
 {
-  FORWARD_TO_INNER_OR_THROW(GetGroupMessageManager, (aGroup, aError), aError, nullptr);
   MOZ_ASSERT(IsChromeWindow());
+  MOZ_ASSERT(IsInnerWindow());
 
   nsGlobalChromeWindow* myself = static_cast<nsGlobalChromeWindow*>(this);
   nsCOMPtr<nsIMessageBroadcaster> messageManager =
@@ -13754,6 +13790,8 @@ NS_IMETHODIMP
 nsGlobalWindow::GetConsole(JSContext* aCx,
                            JS::MutableHandle<JS::Value> aConsole)
 {
+  FORWARD_TO_INNER(GetConsole, (aCx, aConsole), NS_ERROR_FAILURE);
+
   ErrorResult rv;
   nsRefPtr<Console> console = GetConsole(rv);
   if (rv.Failed()) {
@@ -13778,7 +13816,7 @@ nsGlobalWindow::SetConsole(JSContext* aCx, JS::Handle<JS::Value> aValue)
 Console*
 nsGlobalWindow::GetConsole(ErrorResult& aRv)
 {
-  FORWARD_TO_INNER_OR_THROW(GetConsole, (aRv), aRv, nullptr);
+  MOZ_ASSERT(IsInnerWindow());
 
   if (!mConsole) {
     mConsole = new Console(this);
@@ -13790,7 +13828,7 @@ nsGlobalWindow::GetConsole(ErrorResult& aRv)
 already_AddRefed<External>
 nsGlobalWindow::GetExternal(ErrorResult& aRv)
 {
-  FORWARD_TO_INNER_OR_THROW(GetExternal, (aRv), aRv, nullptr);
+  MOZ_ASSERT(IsInnerWindow());
 
 #ifdef HAVE_SIDEBAR
   if (!mExternal) {
@@ -13816,7 +13854,7 @@ void
 nsGlobalWindow::GetSidebar(OwningExternalOrWindowProxy& aResult,
                            ErrorResult& aRv)
 {
-  FORWARD_TO_INNER_OR_THROW(GetSidebar, (aResult, aRv), aRv, );
+  MOZ_ASSERT(IsInnerWindow());
 
 #ifdef HAVE_SIDEBAR
   // First check for a named frame named "sidebar"
