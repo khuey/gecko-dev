@@ -450,7 +450,7 @@ SizeOfTableExcludingThis(const nsBaseHashtable<Key, Data, UserData>& aTable,
     size_t n = aTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
     for (auto iter = aTable.ConstIter(); !iter.Done(); iter.Next()) {
         n += iter.Key().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-        n += iter.Data()->SizeOfIncludingThis(aMallocSizeOf);
+        n += iter.UserData()->SizeOfIncludingThis(aMallocSizeOf);
     }
     return n;
 }

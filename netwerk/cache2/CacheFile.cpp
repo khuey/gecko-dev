@@ -1990,11 +1990,11 @@ CacheFile::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
   n += mKey.SizeOfExcludingThisIfUnshared(mallocSizeOf);
   n += mChunks.ShallowSizeOfExcludingThis(mallocSizeOf);
   for (auto iter = mChunks.ConstIter(); !iter.Done(); iter.Next()) {
-      n += iter.Data()->SizeOfIncludingThis(mallocSizeOf);
+      n += iter.UserData()->SizeOfIncludingThis(mallocSizeOf);
   }
   n += mCachedChunks.ShallowSizeOfExcludingThis(mallocSizeOf);
   for (auto iter = mCachedChunks.ConstIter(); !iter.Done(); iter.Next()) {
-      n += iter.Data()->SizeOfIncludingThis(mallocSizeOf);
+      n += iter.UserData()->SizeOfIncludingThis(mallocSizeOf);
   }
   if (mMetadata) {
     n += mMetadata->SizeOfIncludingThis(mallocSizeOf);

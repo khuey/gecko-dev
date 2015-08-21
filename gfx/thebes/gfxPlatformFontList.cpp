@@ -1083,7 +1083,7 @@ gfxPlatformFontList::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
     for (auto iter = mFontFamilies.ConstIter(); !iter.Done(); iter.Next()) {
         aSizes->mFontListSize +=
             iter.Key().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-        iter.Data()->AddSizeOfIncludingThis(aMallocSizeOf, aSizes);
+        iter.UserData()->AddSizeOfIncludingThis(aMallocSizeOf, aSizes);
     }
 
     aSizes->mFontListSize +=

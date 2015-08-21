@@ -341,14 +341,14 @@ protected:
     nsAutoPtr<ExtraNames> mExtraNames;
 
     // face names missed when face name loading takes a long time
-    nsAutoPtr<nsTHashtable<nsStringHashKey> > mFaceNamesMissed;
+    nsAutoPtr<nsTHashtable<nsStringHashKey>> mFaceNamesMissed;
 
     // localized family names missed when face name loading takes a long time
-    nsAutoPtr<nsTHashtable<nsStringHashKey> > mOtherNamesMissed;
+    nsAutoPtr<nsTHashtable<nsStringHashKey>> mOtherNamesMissed;
 
     // cached pref font lists
     // maps list of family names ==> array of family entries, one per lang group
-    nsDataHashtable<nsUint32HashKey, nsTArray<nsRefPtr<gfxFontFamily> > > mPrefFonts;
+    nsDataHashtable<nsUint32HashKey, nsTArray<nsRefPtr<gfxFontFamily>>> mPrefFonts;
 
     // when system-wide font lookup fails for a character, cache it to skip future searches
     gfxSparseBitSet mCodepointsWithNoFonts;

@@ -154,7 +154,7 @@ public:
       n += mOrdering.ShallowSizeOfExcludingThis(aMallocSizeOf);
       for (auto iter = mOrdering.ConstIter(); !iter.Done(); iter.Next()) {
         // NB: Key is accounted for in the entry.
-        n += iter.Data()->SizeOfIncludingThis(aMallocSizeOf);
+        n += iter.UserData()->SizeOfIncludingThis(aMallocSizeOf);
       }
     }
 

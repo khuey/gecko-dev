@@ -754,7 +754,7 @@ IndexedDatabaseManager::InvalidateAllFileManagers()
   AssertIsOnIOThread();
 
   for (auto iter = mFileManagerInfos.ConstIter(); !iter.Done(); iter.Next()) {
-    auto value = iter.Data();
+    auto value = iter.UserData();
     MOZ_ASSERT(value);
 
     value->InvalidateAllFileManagers();
@@ -994,7 +994,7 @@ IndexedDatabaseManager::Notify(nsITimer* aTimer)
 
   for (auto iter = mPendingDeleteInfos.ConstIter(); !iter.Done(); iter.Next()) {
     auto key = iter.Key();
-    auto value = iter.Data();
+    auto value = iter.UserData();
     MOZ_ASSERT(!value->IsEmpty());
 
     nsRefPtr<DeleteFilesRunnable> runnable =

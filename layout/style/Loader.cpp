@@ -2602,7 +2602,7 @@ Loader::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
       // If aSheet has a parent, then its parent will report it so we don't
       // have to worry about it here. Likewise, if aSheet has an owning node,
       // then the document that node is in will report it.
-      const nsRefPtr<CSSStyleSheet>& aSheet = iter.Data();
+      const nsRefPtr<CSSStyleSheet>& aSheet = iter.UserData();
       n += (aSheet->GetOwnerNode() || aSheet->GetParentSheet())
          ? 0
          : aSheet->SizeOfIncludingThis(aMallocSizeOf);

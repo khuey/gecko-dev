@@ -242,21 +242,53 @@ public:
   //     // ... possibly call iter.Remove() once ...
   //   }
   //
-  class Iterator : public PLDHashTable::Iterator
+  class ConstIterator : protected PLDHashTable::Iterator
   {
   public:
     typedef PLDHashTable::Iterator Base;
 
-    explicit Iterator(nsBaseHashtable* aTable) : Base(&aTable->mTable) {}
-    Iterator(Iterator&& aOther) : Base(aOther.mTable) {}
-    ~Iterator() {}
+    explicit ConstIterator(nsBaseHashtable* aTable) : Base(&aTable->mTable) {}
+    ConstIterator(ConstIterator&& aOther) : Base(aOther.mTable) {}
+    ~ConstIterator() {}
 
     KeyType Key() const { return static_cast<EntryType*>(Get())->GetKey(); }
-    UserDataType UserData() const
-    {
+    UserDataType UserData() const {
       return static_cast<EntryType*>(Get())->mData;
     }
-    DataType& Data() const { return static_cast<EntryType*>(Get())->mData; }
+    const DataType& Data() const {
+      return static_cast<EntryType*>(Get())->mData;
+    }
+
+    bool Done() const {
+      return Base::Done();
+    }
+    void Next() {
+      Base::Next();
+    }
+
+  private:
+    ConstIterator() = delete;
+    ConstIterator(const ConstIterator&) = delete;
+    ConstIterator& operator=(const ConstIterator&) = delete;
+    ConstIterator& operator=(const ConstIterator&&) = delete;
+  };
+
+  class Iterator : public ConstIterator
+  {
+  public:
+    typedef ConstIterator Base;
+
+    explicit Iterator(nsBaseHashtable* aTable) : Base(aTable) {}
+    Iterator(Iterator&& aOther) : Base(mozilla::Forward<Iterator>(aOther)) {}
+    ~Iterator() {}
+
+    DataType& Data() const {
+      return static_cast<EntryType*>(Get())->mData;
+    }
+
+    void Remove() {
+      PLDHashTable::Iterator::Remove();
+    }
 
   private:
     Iterator() = delete;
@@ -267,9 +299,9 @@ public:
 
   Iterator Iter() { return Iterator(this); }
 
-  Iterator ConstIter() const
+  ConstIterator ConstIter() const
   {
-    return Iterator(const_cast<nsBaseHashtable*>(this));
+    return ConstIterator(const_cast<nsBaseHashtable*>(this));
   }
 
   /**

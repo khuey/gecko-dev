@@ -212,7 +212,7 @@ CSSVariableDeclarations::SizeOfIncludingThis(
   n += mVariables.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (auto iter = mVariables.ConstIter(); !iter.Done(); iter.Next()) {
     n += iter.Key().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-    n += iter.Data().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+    n += iter.UserData().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   }
   return n;
 }

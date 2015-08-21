@@ -1837,7 +1837,7 @@ nsComponentManagerImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 
   n += mFactories.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (auto iter = mFactories.ConstIter(); !iter.Done(); iter.Next()) {
-    n += iter.Data()->SizeOfIncludingThis(aMallocSizeOf);
+    n += iter.UserData()->SizeOfIncludingThis(aMallocSizeOf);
   }
 
   n += mContractIDs.ShallowSizeOfExcludingThis(aMallocSizeOf);

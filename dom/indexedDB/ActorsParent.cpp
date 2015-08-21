@@ -9619,7 +9619,7 @@ UpdateRefcountFunction::WillCommit()
   DatabaseUpdateFunction function(this);
   for (auto iter = mFileInfoEntries.ConstIter(); !iter.Done(); iter.Next()) {
     auto key = iter.Key();
-    FileInfoEntry* value = iter.Data();
+    FileInfoEntry* value = iter.UserData();
     MOZ_ASSERT(value);
 
     if (value->mDelta && !function.Update(key, value->mDelta)) {
@@ -9652,7 +9652,7 @@ UpdateRefcountFunction::DidCommit()
                  js::ProfileEntry::Category::STORAGE);
 
   for (auto iter = mFileInfoEntries.ConstIter(); !iter.Done(); iter.Next()) {
-    auto value = iter.Data();
+    auto value = iter.UserData();
 
     MOZ_ASSERT(value);
 
@@ -9717,7 +9717,7 @@ UpdateRefcountFunction::RollbackSavepoint()
 
   for (auto iter = mSavepointEntriesIndex.ConstIter();
        !iter.Done(); iter.Next()) {
-    auto value = iter.Data();
+    auto value = iter.UserData();
     value->mDelta -= value->mSavepointDelta;
   }
 
@@ -11690,7 +11690,7 @@ FullObjectStoreMetadata::HasLiveIndexes() const
   AssertIsOnBackgroundThread();
 
   for (auto iter = mIndexes.ConstIter(); !iter.Done(); iter.Next()) {
-    if (!iter.Data()->mDeleted) {
+    if (!iter.UserData()->mDeleted) {
       return true;
     }
   }
@@ -11715,7 +11715,7 @@ FullDatabaseMetadata::Duplicate() const
 
   for (auto iter = mObjectStores.ConstIter(); !iter.Done(); iter.Next()) {
     auto key = iter.Key();
-    auto value = iter.Data();
+    auto value = iter.UserData();
 
     nsRefPtr<FullObjectStoreMetadata> newOSMetadata =
       new FullObjectStoreMetadata();
@@ -11726,7 +11726,7 @@ FullDatabaseMetadata::Duplicate() const
 
     for (auto iter = value->mIndexes.ConstIter(); !iter.Done(); iter.Next()) {
       auto key = iter.Key();
-      auto value = iter.Data();
+      auto value = iter.UserData();
 
       nsRefPtr<FullIndexMetadata> newIndexMetadata = new FullIndexMetadata();
 
@@ -12556,7 +12556,7 @@ Database::AllocPBackgroundIDBTransactionParent(
     }
 
     for (auto iter = objectStores.ConstIter(); !iter.Done(); iter.Next()) {
-      auto value = iter.Data();
+      auto value = iter.UserData();
       MOZ_ASSERT(iter.Key());
 
       if (name == value->mCommonMetadata.name() && !value->mDeleted) {

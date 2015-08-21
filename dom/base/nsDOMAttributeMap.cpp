@@ -562,7 +562,7 @@ nsDOMAttributeMap::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 
   n += mAttributeCache.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (auto iter = mAttributeCache.ConstIter(); !iter.Done(); iter.Next()) {
-    n += aMallocSizeOf(iter.Data().get());
+    n += aMallocSizeOf(iter.UserData());
   }
 
   // NB: mContent is non-owning and thus not counted.

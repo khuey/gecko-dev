@@ -386,7 +386,7 @@ StartupCache::HeapSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 
     n += mTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
     for (auto iter = mTable.ConstIter(); !iter.Done(); iter.Next()) {
-        n += iter.Data()->SizeOfIncludingThis(aMallocSizeOf);
+        n += iter.UserData()->SizeOfIncludingThis(aMallocSizeOf);
     }
 
     n += mPendingWrites.ShallowSizeOfExcludingThis(aMallocSizeOf);
