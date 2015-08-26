@@ -3,6 +3,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+let disableWorkerTest =
+  "No clearAllDatabases on workers";
+
 let testGenerator = testSteps();
 
 function testSteps()
@@ -24,6 +27,7 @@ function testSteps()
   is(event.type, "upgradeneeded", "Upgrading database " + dbCount);
 
   request.onupgradeneeded = unexpectedSuccessHandler;
+  request.transaction.onerror = function(e) { e.preventDefault(); };
 
   let objStore =
     request.result.createObjectStore("foo", { autoIncrement: true });
@@ -35,6 +39,7 @@ function testSteps()
   objStore.delete(1);
 
   info("Invalidating database " + dbCount);
+  request.onerror = function(e) { e.preventDefault(); };
 
   clearAllDatabases(continueToNextStepSync);
 
@@ -71,6 +76,8 @@ function testSteps()
      "Got complete event for versionchange transaction on database " + dbCount);
 
   info("Invalidating database " + dbCount);
+
+  request.onsuccess = grabEventAndContinueHandler;
 
   clearAllDatabases(continueToNextStepSync);
   yield undefined;

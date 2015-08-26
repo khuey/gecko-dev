@@ -377,9 +377,12 @@ IDBTransaction::OnRequestFinished(bool aActorDestroyedNormally)
   AssertIsOnOwningThread();
   MOZ_ASSERT(mPendingRequestCount);
 
-  --mPendingRequestCount;
+  if (--mPendingRequestCount) {
+    return;
+  }
 
-  if (!mPendingRequestCount && !mDatabase->IsInvalidated()) {
+  // If that was our final request, Commit or Abort.
+  if (!mDatabase->IsInvalidated()) {
     mReadyState = COMMITTING;
 
     if (aActorDestroyedNormally) {
@@ -388,20 +391,22 @@ IDBTransaction::OnRequestFinished(bool aActorDestroyedNormally)
       } else {
         SendAbort(mAbortCode);
       }
-    } else {
-      // Don't try to send any more messages to the parent if the request actor
-      // was killed.
-#ifdef DEBUG
-      MOZ_ASSERT(!mSentCommitOrAbort);
-      mSentCommitOrAbort = true;
-#endif
-      IDB_LOG_MARK("IndexedDB %s: Child  Transaction[%lld]: "
-                     "Request actor was killed, transaction will be aborted",
-                   "IndexedDB %s: C T[%lld]: IDBTransaction abort",
-                   IDB_LOG_ID_STRING(),
-                   LoggingSerialNumber());
+
+      return;
     }
   }
+
+  // Don't try to send any more messages to the parent if the request actor
+  // was killed or the database was invalidated.
+#ifdef DEBUG
+  // We can't assert !mSentCommitOrAbort here, we may have raced.
+  mSentCommitOrAbort = true;
+#endif
+  IDB_LOG_MARK("IndexedDB %s: Child  Transaction[%lld]: "
+                 "Request actor was killed, transaction will be aborted",
+               "IndexedDB %s: C T[%lld]: IDBTransaction abort",
+               IDB_LOG_ID_STRING(),
+               LoggingSerialNumber());
 }
 
 void
