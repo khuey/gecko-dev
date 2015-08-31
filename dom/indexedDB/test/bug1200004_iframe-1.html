@@ -1,0 +1,29 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bug 1200004</title>
+</head>
+<body>
+  <script type="text/javascript">
+    var db;
+    var customerData = [ { ssn: "333-44-3333", name: "Three", age: 23, email: "three@company.com"} ];
+    var delDbReq = indexedDB.deleteDatabase("TestDb1");
+    delDbReq.onsuccess = function() {
+      var dbreq0 = indexedDB.open("TestDb1", { version: 3, storage: "persistent" });
+      dbreq0.onsuccess = function(event) {
+        db = dbreqi.result;
+      };
+    };
+  </script>
+</body>
+<script type="text/javascript">
+  var shared = new SharedWorker("bug1200004.js");
+  onmessage = function() { location.reload() };
+  postMessage("boom", "*");
+  opener.postMessage("kill me", "*");
+</script>
+</html>

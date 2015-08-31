@@ -1,0 +1,35 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bug 1200004</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+</head>
+<body>
+  <script type="text/javascript">
+    SimpleTest.waitForExplicitFinish();
+
+    var popup = window.open("bug1200004_iframe-1.html", "1200004");
+
+    var counter = 0;
+
+    onmessage = function boom() {
+      // Five times around is more than sufficient.
+      if (++counter == 5) {
+        onmessage = function() {
+          popup.close();
+          ok(true, "Didn't crash");
+          SimpleTest.finish();
+          onmessage = null;
+        };
+      }
+    }
+  </script>
+</body>
+</html>
