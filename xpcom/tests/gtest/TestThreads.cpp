@@ -124,6 +124,96 @@ TEST(Threads, Stress)
     }
 }
 
+static bool asyncShutdownReady = false;
+static bool beginAsyncShutdown = false;
+
+class nsAsyncShutdownThread1 : public nsIRunnable {
+public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+
+    NS_IMETHOD Run() override {
+        EXPECT_FALSE(mWasRun);
+        mWasRun = true;
+        asyncShutdownReady = true;
+
+        return NS_OK;
+    }
+
+    explicit nsAsyncShutdownThread1() : mWasRun(false) {}
+
+private:
+    virtual ~nsAsyncShutdownThread1() {
+        EXPECT_TRUE(mWasRun);
+    }
+
+protected:
+    bool mWasRun;
+};
+
+NS_IMPL_ISUPPORTS(nsAsyncShutdownThread1, nsIRunnable)
+
+class nsAsyncShutdownThread2 : public nsIRunnable {
+public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+
+    NS_IMETHOD Run() override {
+        EXPECT_FALSE(mWasRun);
+        mWasRun = true;
+
+        nsCOMPtr<nsIThread> t;
+        nsresult rv = NS_NewThread(getter_AddRefs(t), new nsAsyncShutdownThread1());
+        EXPECT_TRUE(NS_SUCCEEDED(rv));
+
+        // Wait for the main thread to trigger us.
+        while (!beginAsyncShutdown) {}
+
+        rv = t->AsyncShutdown();
+        EXPECT_TRUE(NS_SUCCEEDED(rv));
+
+        return NS_OK;
+    }
+
+    explicit nsAsyncShutdownThread2() : mWasRun(false) {}
+
+private:
+    virtual ~nsAsyncShutdownThread2() {
+        EXPECT_TRUE(mWasRun);
+    }
+
+protected:
+    bool mWasRun;
+};
+
+NS_IMPL_ISUPPORTS(nsAsyncShutdownThread2, nsIRunnable)
+
+class nsAsyncShutdown3 : public nsIRunnable {
+public:
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD Run() override {
+        beginAsyncShutdown = true;
+        return NS_OK;
+    }
+
+private:
+    virtual ~nsAsyncShutdown3() {}
+};
+
+NS_IMPL_ISUPPORTS(nsAsyncShutdown3, nsIRunnable)
+
+TEST(Threads, AsyncShutdown)
+{
+  nsCOMPtr<nsIThread> t;
+  nsresult rv = NS_NewThread(getter_AddRefs(t), new nsAsyncShutdownThread2());
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
+
+  // Wait for everything to be set up.
+  while (!asyncShutdownReady) {}
+
+  NS_DispatchToCurrentThread(new nsAsyncShutdown3());
+  t->Shutdown();
+}
+
 static void threadProc(void *arg)
 {
     // printf("   running thread %d\n", (int) arg);
