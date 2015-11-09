@@ -214,7 +214,7 @@ public:
 
   NS_IMETHOD Run()
   {
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(mWindow);
     nsContentPermissionUtils::AskPermission(mRequest, window);
     return NS_OK;
   }
@@ -368,12 +368,9 @@ nsGeolocationRequest::nsGeolocationRequest(Geolocation* aLocator,
     mShutdown(false),
     mProtocolType(aProtocolType)
 {
-  nsCOMPtr<nsIDOMWindow> win = do_QueryReferent(mLocator->GetOwner());
-  if (win) {
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(win);
-    if (window) {
-      mRequester = new nsContentPermissionRequester(window);
-    }
+  if (nsCOMPtr<nsPIDOMWindowInner> win =
+      do_QueryReferent(mLocator->GetOwner())) {
+    mRequester = new nsContentPermissionRequester(win);
   }
 }
 
@@ -436,11 +433,11 @@ nsGeolocationRequest::GetTypes(nsIArray** aTypes)
 }
 
 NS_IMETHODIMP
-nsGeolocationRequest::GetWindow(nsIDOMWindow * *aRequestingWindow)
+nsGeolocationRequest::GetWindow(mozIDOMWindow** aRequestingWindow)
 {
   NS_ENSURE_ARG_POINTER(aRequestingWindow);
 
-  nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(mLocator->GetOwner());
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(mLocator->GetOwner());
   window.forget(aRequestingWindow);
 
   return NS_OK;
@@ -1222,22 +1219,17 @@ Geolocation::~Geolocation()
 }
 
 nsresult
-Geolocation::Init(nsIDOMWindow* aContentDom)
+Geolocation::Init(nsPIDOMWindowInner* aContentDom)
 {
   // Remember the window
   if (aContentDom) {
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aContentDom);
-    if (!window) {
-      return NS_ERROR_FAILURE;
-    }
-
-    mOwner = do_GetWeakReference(window->GetCurrentInnerWindow());
+    mOwner = do_GetWeakReference(aContentDom);
     if (!mOwner) {
       return NS_ERROR_FAILURE;
     }
 
     // Grab the principal of the document
-    nsCOMPtr<nsIDocument> doc = window->GetDoc();
+    nsCOMPtr<nsIDocument> doc = aContentDom->GetDoc();
     if (!doc) {
       return NS_ERROR_FAILURE;
     }
@@ -1343,8 +1335,7 @@ Geolocation::Shutdown()
   mWatchingCallbacks.Clear();
 
   if (XRE_IsContentProcess()) {
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mOwner);
-    if (window) {
+    if (nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(mOwner)) {
       nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
       if (doc) {
         doc->RemoveSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
@@ -1363,9 +1354,9 @@ Geolocation::Shutdown()
   mPrincipal = nullptr;
 }
 
-nsIDOMWindow*
+nsPIDOMWindowInner*
 Geolocation::GetParentObject() const {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mOwner);
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(mOwner);
   return window.get();
 }
 
@@ -1729,10 +1720,10 @@ Geolocation::WindowOwnerStillExists()
     return true;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mOwner);
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(mOwner);
 
   if (window) {
-    nsPIDOMWindow* outer = window->GetOuterWindow();
+    nsPIDOMWindowOuter* outer = window->GetOuterWindow();
     if (!outer || outer->GetCurrentInnerWindow() != window ||
         outer->Closed()) {
       return false;

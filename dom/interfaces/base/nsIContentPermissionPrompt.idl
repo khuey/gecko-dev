@@ -5,7 +5,7 @@
 #include "nsISupports.idl"
 
 interface nsIPrincipal;
-interface nsIDOMWindow;
+interface mozIDOMWindow;
 interface nsIDOMElement;
 interface nsIArray;
 
@@ -84,7 +84,7 @@ interface nsIContentPermissionRequest : nsISupports {
    *  in when using out of process content.  window or
    *  element can be null but not both.
    */
-  readonly attribute nsIDOMWindow window;
+  readonly attribute mozIDOMWindow window;
   readonly attribute nsIDOMElement element;
 
   /**

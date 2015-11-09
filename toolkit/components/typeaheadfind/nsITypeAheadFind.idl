@@ -12,6 +12,7 @@
 
 /******************************** Declarations *******************************/
 
+interface mozIDOMWindow;
 interface nsIDocShell;
 
 
@@ -68,7 +69,7 @@ interface nsITypeAheadFind : nsISupports
                                         // Most recent elem found, if a link
   readonly attribute nsIDOMElement foundEditable;
                                         // Most recent elem found, if editable
-  readonly attribute nsIDOMWindow currentWindow;
+  readonly attribute mozIDOMWindow currentWindow;
                                         // Window of most recent match
 
 

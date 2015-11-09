@@ -10,6 +10,7 @@ interface nsIInterfaceRequestor;
 interface nsIWebBrowserChrome;
 interface nsIURIContentListener;
 interface nsIDOMWindow;
+interface mozIDOMWindowProxy;
 interface nsIWeakReference;
 
 /**
@@ -131,7 +132,7 @@ interface nsIWebBrowser : nsISupports
      *
      * @see nsIDOMWindow
      */
-    readonly attribute nsIDOMWindow contentDOMWindow;
+    readonly attribute mozIDOMWindowProxy contentDOMWindow;
 
     /**
      * Whether this web browser is active. Active means that it's visible

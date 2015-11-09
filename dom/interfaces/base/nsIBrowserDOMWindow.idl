@@ -5,6 +5,7 @@
 
 #include "nsISupports.idl"
 
+interface mozIDOMWindowProxy;
 interface nsIDOMWindow;
 interface nsIURI;
 interface nsIFrameLoaderOwner;
@@ -83,8 +84,9 @@ interface nsIBrowserDOMWindow : nsISupports
    *                 is used only when aWhere == OPEN_DEFAULTWINDOW.
    * @return the window into which the URI was opened.
   */
-  nsIDOMWindow openURI(in nsIURI aURI, in nsIDOMWindow aOpener,
-                       in short aWhere, in short aContext);
+  mozIDOMWindowProxy
+  openURI(in nsIURI aURI, in mozIDOMWindowProxy aOpener,
+          in short aWhere, in short aContext);
 
   /**
    * As above, but return the nsIFrameLoaderOwner for the new window.

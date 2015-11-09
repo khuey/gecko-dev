@@ -34,22 +34,6 @@ interface nsIDOMMouseEvent : nsIDOMUIEvent
   readonly attribute unsigned short     buttons;
   readonly attribute nsIDOMEventTarget  relatedTarget;
 
-  void                      initMouseEvent(in DOMString typeArg,
-                                           in boolean canBubbleArg,
-                                           in boolean cancelableArg,
-                                           in nsIDOMWindow viewArg,
-                                           in long detailArg,
-                                           in long screenXArg,
-                                           in long screenYArg,
-                                           in long clientXArg,
-                                           in long clientYArg,
-                                           in boolean ctrlKeyArg,
-                                           in boolean altKeyArg,
-                                           in boolean shiftKeyArg,
-                                           in boolean metaKeyArg,
-                                           in unsigned short buttonArg,
-                                           in nsIDOMEventTarget relatedTargetArg);
-
   // Finger or touch pressure event value
   // ranges between 0.0 and 1.0
   readonly attribute float mozPressure;
@@ -63,24 +47,6 @@ interface nsIDOMMouseEvent : nsIDOMUIEvent
   const unsigned short    MOZ_SOURCE_KEYBOARD   = 6;
 
   readonly attribute unsigned short mozInputSource;
-
-  void                initNSMouseEvent(in DOMString typeArg,
-                                       in boolean canBubbleArg,
-                                       in boolean cancelableArg,
-                                       in nsIDOMWindow viewArg,
-                                       in long detailArg,
-                                       in long screenXArg,
-                                       in long screenYArg,
-                                       in long clientXArg,
-                                       in long clientYArg,
-                                       in boolean ctrlKeyArg,
-                                       in boolean altKeyArg,
-                                       in boolean shiftKeyArg,
-                                       in boolean metaKeyArg,
-                                       in unsigned short buttonArg,
-                                       in nsIDOMEventTarget relatedTargetArg,
-                                       in float pressure,
-                                       in unsigned short inputSourceArg);
 
   bool getModifierState(in DOMString keyArg);
 };

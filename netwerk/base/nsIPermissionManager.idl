@@ -33,7 +33,7 @@
 interface nsIURI;
 interface nsIObserver;
 interface nsIPrincipal;
-interface nsIDOMWindow;
+interface mozIDOMWindow;
 interface nsIPermission;
 interface nsISimpleEnumerator;
 
@@ -165,7 +165,7 @@ interface nsIPermissionManager : nsISupports
    * permission to perform a given action.  System principals will always
    * have permissions granted.
    */
-  uint32_t testPermissionFromWindow(in nsIDOMWindow window,
+  uint32_t testPermissionFromWindow(in mozIDOMWindow window,
                                     in string type);
 
   /**

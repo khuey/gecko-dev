@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
+interface mozIDOMWindowProxy;
 
 /**
  * This interface allows creating various prompts that have a specific parent.
@@ -16,7 +16,7 @@ interface nsIPromptFactory : nsISupports
    * Returns an object implementing the specified interface that creates
    * prompts parented to aParent.
    */
-  void getPrompt(in nsIDOMWindow aParent, in nsIIDRef iid,
+  void getPrompt(in mozIDOMWindowProxy aParent, in nsIIDRef iid,
                  [iid_is(iid),retval] out nsQIResult result);
 };
 

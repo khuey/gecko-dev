@@ -36,7 +36,7 @@ interface nsIDOMXULCommandEvent : nsIDOMUIEvent
   void initCommandEvent(in DOMString typeArg,
                         in boolean canBubbleArg,
                         in boolean cancelableArg,
-                        in nsIDOMWindow viewArg,
+                        in mozIDOMWindow viewArg,
                         in long detailArg,
                         in boolean ctrlKeyArg,
                         in boolean altKeyArg,

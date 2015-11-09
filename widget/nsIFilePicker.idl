@@ -8,7 +8,7 @@
 
 interface nsIFile;
 interface nsIURI;
-interface nsIDOMWindow;
+interface mozIDOMWindowProxy;
 interface nsISimpleEnumerator;
 
 [scriptable, function, uuid(0d79adad-b244-49A5-9997-2a8cad93fc44)]
@@ -62,13 +62,13 @@ interface nsIFilePicker : nsISupports
   * Initialize the file picker widget.  The file picker is not valid until this
   * method is called.
   *
-  * @param      parent   nsIDOMWindow parent.  This dialog will be dependent
+  * @param      parent   mozIDOMWindow parent.  This dialog will be dependent
   *                      on this parent. parent must be non-null.
   * @param      title    The title for the file widget
   * @param      mode     load, save, or get folder
   *
   */
-  void init(in nsIDOMWindow parent, in AString title, in short mode);
+  void init(in mozIDOMWindowProxy parent, in AString title, in short mode);
 
  /**
   * Append to the  filter list with things from the predefined list

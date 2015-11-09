@@ -2191,7 +2191,7 @@ ReportLenientThisUnwrappingFailure(JSContext* cx, JSObject* obj)
   if (global.Failed()) {
     return false;
   }
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(global.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global.GetAsSupports());
   if (window && window->GetDoc()) {
     window->GetDoc()->WarnOnceAbout(nsIDocument::eLenientThis);
   }
@@ -2279,7 +2279,7 @@ ConstructJSImplementation(JSContext* aCx, const char* aContractId,
     // and our global is a window.
     nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi =
       do_QueryInterface(implISupports);
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal);
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal);
     if (gpi) {
       JS::Rooted<JS::Value> initReturn(aCx);
       rv = gpi->Init(window, &initReturn);
@@ -2496,7 +2496,7 @@ bool
 CheckAnyPermissions(JSContext* aCx, JSObject* aObj, const char* const aPermissions[])
 {
   JS::Rooted<JSObject*> rootedObj(aCx, aObj);
-  nsPIDOMWindow* window = xpc::WindowGlobalOrNull(rootedObj);
+  nsPIDOMWindowInner* window = xpc::WindowGlobalOrNull(rootedObj)->AsInner();
   if (!window) {
     return false;
   }
@@ -2518,7 +2518,7 @@ bool
 CheckAllPermissions(JSContext* aCx, JSObject* aObj, const char* const aPermissions[])
 {
   JS::Rooted<JSObject*> rootedObj(aCx, aObj);
-  nsPIDOMWindow* window = xpc::WindowGlobalOrNull(rootedObj);
+  nsPIDOMWindowInner* window = xpc::WindowGlobalOrNull(rootedObj)->AsInner();
   if (!window) {
     return false;
   }
@@ -2586,7 +2586,7 @@ IsNonExposedGlobal(JSContext* aCx, JSObject* aGlobal,
 }
 
 void
-HandlePrerenderingViolation(nsPIDOMWindow* aWindow)
+HandlePrerenderingViolation(nsPIDOMWindowInner* aWindow)
 {
   // Suspend the window and its workers, and its children too.
   aWindow->SuspendTimeouts();
@@ -2613,7 +2613,7 @@ EnforceNotInPrerendering(JSContext* aCx, JSObject* aObj)
   }
 
   if (window->GetIsPrerendered()) {
-    HandlePrerenderingViolation(window);
+    HandlePrerenderingViolation(window->AsInner());
     // When the bindings layer sees a false return value, it returns false form
     // the JSNative in order to trigger an uncatchable exception.
     return false;
@@ -2927,30 +2927,43 @@ UnwrapArgImpl(JS::Handle<JSObject*> src,
               const nsIID &iid,
               void **ppArg)
 {
-    if (!NS_IsMainThread()) {
-      return NS_ERROR_NOT_AVAILABLE;
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsISupports *iface = xpc::UnwrapReflectorToISupports(src);
+  if (iface) {
+    if (NS_FAILED(iface->QueryInterface(iid, ppArg))) {
+      return NS_ERROR_XPC_BAD_CONVERT_JS;
     }
 
-    nsISupports *iface = xpc::UnwrapReflectorToISupports(src);
-    if (iface) {
-        if (NS_FAILED(iface->QueryInterface(iid, ppArg))) {
-            return NS_ERROR_XPC_BAD_CONVERT_JS;
-        }
+    return NS_OK;
+  }
 
-        return NS_OK;
-    }
+  RefPtr<nsXPCWrappedJS> wrappedJS;
+  nsresult rv = nsXPCWrappedJS::GetNewOrUsed(src, iid, getter_AddRefs(wrappedJS));
+  if (NS_FAILED(rv) || !wrappedJS) {
+    return rv;
+  }
 
-    RefPtr<nsXPCWrappedJS> wrappedJS;
-    nsresult rv = nsXPCWrappedJS::GetNewOrUsed(src, iid, getter_AddRefs(wrappedJS));
-    if (NS_FAILED(rv) || !wrappedJS) {
-        return rv;
-    }
+  // We need to go through the QueryInterface logic to make this return
+  // the right thing for the various 'special' interfaces; e.g.
+  // nsIPropertyBag. We must use AggregatedQueryInterface in cases where
+  // there is an outer to avoid nasty recursion.
+  return wrappedJS->QueryInterface(iid, ppArg);
+}
 
-    // We need to go through the QueryInterface logic to make this return
-    // the right thing for the various 'special' interfaces; e.g.
-    // nsIPropertyBag. We must use AggregatedQueryInterface in cases where
-    // there is an outer to avoid nasty recursion.
-    return wrappedJS->QueryInterface(iid, ppArg);
+nsresult
+UnwrapWindowProxyImpl(JS::Handle<JSObject*> src,
+                      nsPIDOMWindowOuter** ppArg)
+{
+  nsCOMPtr<nsPIDOMWindowInner> inner;
+  nsresult rv = UnwrapArg<nsPIDOMWindowInner>(src, getter_AddRefs(inner));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsPIDOMWindowOuter> outer = inner->GetOuterWindow();
+  outer.forget(ppArg);
+  return NS_OK;
 }
 
 bool
@@ -3191,7 +3204,7 @@ DeprecationWarning(JSContext* aCx, JSObject* aObject,
     return;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(global.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global.GetAsSupports());
   if (window && window->GetExtantDoc()) {
     window->GetExtantDoc()->WarnOnceAbout(aOperation);
   }

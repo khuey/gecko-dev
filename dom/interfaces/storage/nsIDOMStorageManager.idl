@@ -7,7 +7,7 @@
 
 interface nsIDOMStorage;
 interface nsIPrincipal;
-interface nsIDOMWindow;
+interface mozIDOMWindow;
 
 /**
  * General purpose interface that has two implementations, for localStorage
@@ -37,7 +37,7 @@ interface nsIDOMStorageManager : nsISupports
    * @param aPrivate
    *    Whether the demanding document is running in Private Browsing mode or not.
    */
-  nsIDOMStorage createStorage(in nsIDOMWindow aWindow,
+  nsIDOMStorage createStorage(in mozIDOMWindow aWindow,
                               in nsIPrincipal aPrincipal,
                               in DOMString aDocumentURI,
                               [optional] in bool aPrivate);
@@ -54,7 +54,7 @@ interface nsIDOMStorageManager : nsISupports
    * @param aPrivate
    *    Whether the demanding document is running in Private Browsing mode or not.
    */
-  nsIDOMStorage getStorage(in nsIDOMWindow aWindow,
+  nsIDOMStorage getStorage(in mozIDOMWindow aWindow,
                            in nsIPrincipal aPrincipal,
                            [optional] in bool aPrivate);
 

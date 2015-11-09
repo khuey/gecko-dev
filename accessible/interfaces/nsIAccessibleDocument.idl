@@ -7,7 +7,7 @@
 
 interface nsIAccessiblePivot;
 interface nsIDOMDocument;
-interface nsIDOMWindow;
+interface mozIDOMWindowProxy;
 
 /**
  * An interface for in-process accessibility clients
@@ -50,7 +50,7 @@ interface nsIAccessibleDocument : nsISupports
   /**
    * The nsIDOMWindow that the document resides in.
    */
-  readonly attribute nsIDOMWindow window;
+  readonly attribute mozIDOMWindowProxy window;
 
   /**
    * Return the parent document accessible.

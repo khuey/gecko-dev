@@ -8,7 +8,7 @@
 
 interface nsIDocShellTreeOwner;
 interface nsIDocument;
-interface nsPIDOMWindow;
+interface nsPIDOMWindowOuter;
 
 
 /**
@@ -179,6 +179,6 @@ interface nsIDocShellTreeItem : nsISupports
 	                                      in nsIDocShellTreeItem aOriginalRequestor);
 
   [noscript,nostdcall,notxpcom] nsIDocument getDocument();
-  [noscript,nostdcall,notxpcom] nsPIDOMWindow getWindow();
+  [noscript,nostdcall,notxpcom] nsPIDOMWindowOuter getWindow();
 };
 

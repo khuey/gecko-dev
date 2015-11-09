@@ -117,7 +117,7 @@ public:
   MediaPermissionRequest(RefPtr<dom::GetUserMediaRequest> &aRequest,
                          nsTArray<nsCOMPtr<nsIMediaDevice> > &aDevices);
 
-  already_AddRefed<nsPIDOMWindow> GetOwner();
+  already_AddRefed<nsPIDOMWindowInner> GetOwner();
 
 protected:
   virtual ~MediaPermissionRequest() {}
@@ -158,8 +158,8 @@ MediaPermissionRequest::MediaPermissionRequest(RefPtr<dom::GetUserMediaRequest> 
     }
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = GetOwner();
-  mRequester = new nsContentPermissionRequester(window.get());
+  nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
+  mRequester = new nsContentPermissionRequester(window);
 }
 
 // nsIContentPermissionRequest methods
@@ -315,11 +315,11 @@ MediaPermissionRequest::DoAllow(const nsString &audioDevice,
   return NotifyPermissionAllow(callID, selectedDevices);
 }
 
-already_AddRefed<nsPIDOMWindow>
+already_AddRefed<nsPIDOMWindowInner>
 MediaPermissionRequest::GetOwner()
 {
-  nsCOMPtr<nsPIDOMWindow> window = static_cast<nsPIDOMWindow*>
-      (nsGlobalWindow::GetInnerWindowWithId(mRequest->InnerWindowID()));
+  nsCOMPtr<nsPIDOMWindowInner> window =
+    nsGlobalWindow::GetInnerWindowWithId(mRequest->InnerWindowID())->AsInner();
   return window.forget();
 }
 
@@ -384,7 +384,7 @@ MediaDeviceSuccessCallback::OnSuccess(nsIVariant* aDevices)
 nsresult
 MediaDeviceSuccessCallback::DoPrompt(RefPtr<MediaPermissionRequest> &req)
 {
-  nsCOMPtr<nsPIDOMWindow> window(req->GetOwner());
+  nsCOMPtr<nsPIDOMWindowInner> window(req->GetOwner());
   return dom::nsContentPermissionUtils::AskPermission(req, window);
 }
 

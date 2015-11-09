@@ -29,5 +29,4 @@ interface nsIDOMHTMLFrameElement : nsISupports
            attribute DOMString        src;
   // Introduced in DOM Level 2:
   readonly attribute nsIDOMDocument   contentDocument;
-  readonly attribute nsIDOMWindow     contentWindow;
 };

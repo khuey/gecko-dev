@@ -5,6 +5,8 @@
 
 #include "nsIDOMEvent.idl"
 
+interface mozIDOMWindowProxy;
+
 /**
  * The SMIL TimeEvent interface.
  *
@@ -17,9 +19,4 @@
 interface nsIDOMTimeEvent : nsIDOMEvent
 {
   readonly attribute long detail;
-  readonly attribute nsIDOMWindow view;
-  
-  void initTimeEvent(in DOMString typeArg,
-                     in nsIDOMWindow viewArg,
-                     in long detailArg);
 };

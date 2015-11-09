@@ -1,6 +1,6 @@
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
+interface mozIDOMWindow;
 interface nsIPrincipal;
 
 [scriptable, uuid(9cf3b48e-361d-486a-8917-55cf8d00bb41)]
@@ -33,7 +33,7 @@ interface nsIWorkerDebugger : nsISupports
 
   readonly attribute DOMString url;
 
-  readonly attribute nsIDOMWindow window;
+  readonly attribute mozIDOMWindow window;
 
   readonly attribute nsIPrincipal principal;
 

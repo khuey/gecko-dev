@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
+interface mozIDOMWindowProxy;
 
 /**
  * nsIColorPicker is representing colors as strings because the internal
@@ -62,7 +62,7 @@ interface nsIColorPicker : nsISupports
   *                          parameter has to follow the format specified on top
   *                          of this file.
   */
-  void init(in nsIDOMWindow parent, in AString title, in AString initialColor);
+  void init(in mozIDOMWindowProxy parent, in AString title, in AString initialColor);
 
  /**
   * Opens the color dialog asynchrounously.

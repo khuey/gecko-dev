@@ -14,6 +14,7 @@
 #endif
 %}
 
+interface mozIDOMWindowProxy;
 interface nsIDOMNodeIterator;
 interface nsIDOMNodeFilter;
 interface nsIDOMTreeWalker;
@@ -105,7 +106,7 @@ interface nsIDOMDocument : nsIDOMNode
    *
    * @see <http://www.whatwg.org/html/#dom-document-defaultview>
    */
-  readonly attribute nsIDOMWindow   defaultView;
+  readonly attribute mozIDOMWindowProxy   defaultView;
 
   /**
    * @see <http://www.whatwg.org/html/#dom-document-characterset>

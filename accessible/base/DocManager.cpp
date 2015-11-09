@@ -186,11 +186,11 @@ DocManager::OnStateChange(nsIWebProgress* aWebProgress,
       (aStateFlags & (STATE_START | STATE_STOP)) == 0)
     return NS_OK;
 
-  nsCOMPtr<nsIDOMWindow> DOMWindow;
+  nsCOMPtr<mozIDOMWindowProxy> DOMWindow;
   aWebProgress->GetDOMWindow(getter_AddRefs(DOMWindow));
   NS_ENSURE_STATE(DOMWindow);
 
-  nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(DOMWindow);
+  nsPIDOMWindowOuter* piWindow = nsPIDOMWindowOuter::From(DOMWindow);
   MOZ_ASSERT(piWindow);
 
   nsCOMPtr<nsIDocument> document = piWindow->GetDoc();
@@ -371,7 +371,7 @@ void
 DocManager::AddListeners(nsIDocument* aDocument,
                          bool aAddDOMContentLoadedListener)
 {
-  nsPIDOMWindow* window = aDocument->GetWindow();
+  nsPIDOMWindowOuter* window = aDocument->GetWindow();
   EventTarget* target = window->GetChromeEventHandler();
   EventListenerManager* elm = target->GetOrCreateListenerManager();
   elm->AddEventListenerByType(this, NS_LITERAL_STRING("pagehide"),
@@ -395,7 +395,7 @@ DocManager::AddListeners(nsIDocument* aDocument,
 void
 DocManager::RemoveListeners(nsIDocument* aDocument)
 {
-  nsPIDOMWindow* window = aDocument->GetWindow();
+  nsPIDOMWindowOuter* window = aDocument->GetWindow();
   if (!window)
     return;
 

@@ -63,7 +63,7 @@ public:
   nsCOMArray<nsIWebProgressListener> mPrintProgressListeners;
   nsCOMPtr<nsIPrintProgressParams> mPrintProgressParams;
 
-  nsCOMPtr<nsIDOMWindow> mCurrentFocusWin; // cache a pointer to the currently focused window
+  nsCOMPtr<nsPIDOMWindowOuter> mCurrentFocusWin; // cache a pointer to the currently focused window
 
   nsTArray<nsPrintObject*>    mPrintDocList;
   bool                        mIsIFrameSelected;

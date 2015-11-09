@@ -13,7 +13,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
+interface mozIDOMWindowProxy;
 interface nsIURI;
 
 /**
@@ -90,13 +90,13 @@ interface nsIWindowProvider : nsISupports
    * @see nsIWindowWatcher for more information on aFeatures.
    * @see nsIWebBrowserChrome for more information on aChromeFlags.
    */
-  nsIDOMWindow provideWindow(in nsIDOMWindow aParent,
-                             in unsigned long aChromeFlags,
-                             in boolean aCalledFromJS,
-                             in boolean aPositionSpecified,
-                             in boolean aSizeSpecified,
-                             in nsIURI aURI,
-                             in AString aName,
-                             in AUTF8String aFeatures,
-                             out boolean aWindowIsNew);
+  mozIDOMWindowProxy provideWindow(in mozIDOMWindowProxy aParent,
+                                   in unsigned long aChromeFlags,
+                                   in boolean aCalledFromJS,
+                                   in boolean aPositionSpecified,
+                                   in boolean aSizeSpecified,
+                                   in nsIURI aURI,
+                                   in AString aName,
+                                   in AUTF8String aFeatures,
+                                   out boolean aWindowIsNew);
 };

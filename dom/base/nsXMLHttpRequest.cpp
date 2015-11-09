@@ -44,7 +44,6 @@
 #include "nsXPCOM.h"
 #include "nsIDOMEventListener.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIDOMWindow.h"
 #include "nsIVariant.h"
 #include "nsVariant.h"
 #include "nsIScriptError.h"
@@ -155,7 +154,7 @@ NS_IMPL_ISUPPORTS(nsXHRParseEndListener, nsIDOMEventListener)
 class nsResumeTimeoutsEvent : public nsRunnable
 {
 public:
-  explicit nsResumeTimeoutsEvent(nsPIDOMWindow* aWindow) : mWindow(aWindow) {}
+  explicit nsResumeTimeoutsEvent(nsPIDOMWindowInner* aWindow) : mWindow(aWindow) {}
 
   NS_IMETHOD Run()
   {
@@ -164,7 +163,7 @@ public:
   }
 
 private:
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
 };
 
 
@@ -373,8 +372,8 @@ nsXMLHttpRequest::Init(nsIPrincipal* aPrincipal,
                        nsILoadGroup* aLoadGroup)
 {
   NS_ENSURE_ARG_POINTER(aPrincipal);
-
-  if (nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aGlobalObject)) {
+  /*
+  if (nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobalObject)) {
     if (win->IsOuterWindow()) {
       // Must be bound to inner window, innerize if necessary.
       nsCOMPtr<nsIGlobalObject> inner = do_QueryInterface(
@@ -382,7 +381,7 @@ nsXMLHttpRequest::Init(nsIPrincipal* aPrincipal,
       aGlobalObject = inner.get();
     }
   }
-
+  */
   Construct(aPrincipal, aGlobalObject, aBaseURI, aLoadGroup);
   return NS_OK;
 }
@@ -584,7 +583,7 @@ nsXMLHttpRequest::GetChannel(nsIChannel **aChannel)
   return NS_OK;
 }
 
-static void LogMessage(const char* aWarning, nsPIDOMWindow* aWindow)
+static void LogMessage(const char* aWarning, nsPIDOMWindowInner* aWindow)
 {
   nsCOMPtr<nsIDocument> doc;
   if (aWindow) {
@@ -2639,7 +2638,7 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
     httpChannel->GetRequestMethod(method); // If GET, method name will be uppercase
 
     if (!IsSystemXHR()) {
-      nsCOMPtr<nsPIDOMWindow> owner = GetOwner();
+      nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner();
       nsCOMPtr<nsIDocument> doc = owner ? owner->GetExtantDoc() : nullptr;
       nsContentUtils::SetFetchReferrerURIWithPolicy(mPrincipal, doc,
                                                     httpChannel);
@@ -2927,15 +2926,14 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
     nsCOMPtr<nsIDocument> suspendedDoc;
     nsCOMPtr<nsIRunnable> resumeTimeoutRunnable;
     if (GetOwner()) {
-      if (nsCOMPtr<nsPIDOMWindow> topWindow = GetOwner()->GetOuterWindow()->GetTop()) {
-        if (topWindow &&
-            (topWindow = topWindow->GetCurrentInnerWindow())) {
+      if (nsCOMPtr<nsPIDOMWindowOuter> topWindow = GetOwner()->GetOuterWindow()->GetTop()) {
+        if (nsCOMPtr<nsPIDOMWindowInner> topInner = topWindow->GetCurrentInnerWindow()) {
           suspendedDoc = topWindow->GetExtantDoc();
           if (suspendedDoc) {
             suspendedDoc->SuppressEventHandling(nsIDocument::eEvents);
           }
           topWindow->SuspendTimeouts(1, false);
-          resumeTimeoutRunnable = new nsResumeTimeoutsEvent(topWindow);
+          resumeTimeoutRunnable = new nsResumeTimeoutsEvent(topInner);
         }
       }
     }
@@ -3581,7 +3579,7 @@ nsXMLHttpRequest::GetInterface(const nsIID & aIID, void **aResult)
     // Get the an auth prompter for our window so that the parenting
     // of the dialogs works as it should when using tabs.
 
-    nsCOMPtr<nsIDOMWindow> window;
+    nsCOMPtr<nsPIDOMWindowOuter> window;
     if (GetOwner()) {
       window = GetOwner()->GetOuterWindow();
     }

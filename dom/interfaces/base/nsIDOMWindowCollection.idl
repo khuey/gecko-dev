@@ -5,6 +5,8 @@
 
 #include "domstubs.idl"
 
+interface mozIDOMWindowProxy;
+
 /**
  * The nsIDOMWindowCollection interface is an interface for a
  * collection of DOM window objects.
@@ -21,10 +23,10 @@ interface nsIDOMWindowCollection : nsISupports
   /**
    * Method for accessing an item in this collection by index.
    */
-  nsIDOMWindow              item(in unsigned long index);
+  mozIDOMWindowProxy        item(in unsigned long index);
 
   /**
    * Method for accessing an item in this collection by window name.
    */
-  nsIDOMWindow              namedItem(in DOMString name);
+  mozIDOMWindowProxy        namedItem(in DOMString name);
 };

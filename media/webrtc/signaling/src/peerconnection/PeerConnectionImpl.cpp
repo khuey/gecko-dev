@@ -688,7 +688,7 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   // Currently no standalone unit tests for DataChannel,
   // which is the user of mWindow
   MOZ_ASSERT(aWindow);
-  mWindow = aWindow;
+  mWindow = aWindow->AsInner();
   NS_ENSURE_STATE(mWindow);
 #endif // MOZILLA_INTERNAL_API
 
