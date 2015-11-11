@@ -91,8 +91,7 @@ public:
                         bool aCancelable, JS::Handle<JS::Value> aData,
                         const nsAString& aOrigin, const nsAString& aLastEventId,
                         const Nullable<WindowProxyOrMessagePort>& aSource,
-                        const Nullable<Sequence<OwningNonNull<MessagePort>>>& aPorts,
-                        ErrorResult& aRv);
+                        const Nullable<Sequence<OwningNonNull<MessagePort>>>& aPorts);
 
 protected:
   ~MessageEvent();

@@ -1067,6 +1067,7 @@ nsDocumentViewer::PermitUnloadInternal(bool aCallerClosesWindow,
 {
   AutoDontWarnAboutSyncXHR disableSyncXHRWarning;
 
+  nsresult rv = NS_OK;
   *aPermitUnload = true;
 
   if (!mDocument
@@ -1107,9 +1108,7 @@ nsDocumentViewer::PermitUnloadInternal(bool aCallerClosesWindow,
                       getter_AddRefs(event));
   nsCOMPtr<nsIDOMBeforeUnloadEvent> beforeUnload = do_QueryInterface(event);
   NS_ENSURE_STATE(beforeUnload);
-  nsresult rv = event->InitEvent(NS_LITERAL_STRING("beforeunload"),
-                                 false, true);
-  NS_ENSURE_SUCCESS(rv, rv);
+  event->InitEvent(NS_LITERAL_STRING("beforeunload"), false, true);
 
   // Dispatching to |window|, but using |document| as the target.
   event->SetTarget(mDocument);
