@@ -569,11 +569,6 @@ private:
     return !!mActor;
   }
 
-  static PLDHashOperator
-  CheckPendingReadyPromisesEnumerator(nsISupports* aSupports,
-                                      nsAutoPtr<PendingReadyPromise>& aData,
-                                      void* aUnused);
-
   nsClassHashtable<nsISupportsHashKey, PendingReadyPromise> mPendingReadyPromises;
 
   void
