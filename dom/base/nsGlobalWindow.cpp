@@ -1752,7 +1752,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   if (aIID.Equals(NS_GET_IID(nsPIDOMWindowInner))) {
     foundInterface = this->AsInner();
   } else
-    if (aIID.Equals(NS_GET_IID(mozIDOMWindow)) && IsInnerWindow()) {
+  if (aIID.Equals(NS_GET_IID(mozIDOMWindow)) && IsInnerWindow()) {
     foundInterface = this->AsInner();
   } else
   if (aIID.Equals(NS_GET_IID(nsPIDOMWindowOuter))) {
