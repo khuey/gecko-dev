@@ -45,9 +45,8 @@ nsPrintingPromptService::ShowPrintDialog(mozIDOMWindowProxy *parent, nsIWebBrows
   nsCOMPtr<nsIPrintDialogService> dlgPrint(do_GetService(
                                            NS_PRINTDIALOGSERVICE_CONTRACTID));
   if (dlgPrint) {
-    nsCOMPtr<nsPIDOMWindowOuter> outer(do_QueryInterface(parent));
-    return outer ? dlgPrint->Show(outer, printSettings, webBrowserPrint) :
-            NS_ERROR_FAILURE;
+    return dlgPrint->Show(nsPIDOMWindowOuter::From(parent), printSettings,
+                          webBrowserPrint);
   }
 
   return NS_ERROR_FAILURE;
@@ -75,9 +74,7 @@ nsPrintingPromptService::ShowPageSetup(mozIDOMWindowProxy *parent, nsIPrintSetti
   nsCOMPtr<nsIPrintDialogService> dlgPrint(do_GetService(
                                            NS_PRINTDIALOGSERVICE_CONTRACTID));
   if (dlgPrint) {
-    nsCOMPtr<nsPIDOMWindowOuter> outer(do_QueryInterface(parent));
-    return outer ? dlgPrint->ShowPageSetup(outer, printSettings) :
-             NS_ERROR_FAILURE;
+    return dlgPrint->ShowPageSetup(nsPIDOMWindowOuter::From(parent), printSettings);
   }
 
   return NS_ERROR_FAILURE;
