@@ -1709,7 +1709,7 @@ nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup)
 
 #ifdef XP_MACOSX
   if (rootWin) {
-    nsGlobalWindow *globalWin = static_cast<nsGlobalWindow *>(rootWin.get());
+    auto globalWin = nsGlobalWindow::Cast(rootWin.get());
     if (globalWin->IsInModalState()) {
       return false;
     }
